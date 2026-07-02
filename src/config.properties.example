@@ -1,0 +1,15 @@
+db.driver=com.mysql.cj.jdbc.Driver
+
+# Salin file ini menjadi config.properties (folder yang sama), lalu isi
+# kredensial sungguhan. config.properties tidak ikut repo (.gitignore).
+# Setelah diisi, Clean and Build agar ter-bundle ke JAR.
+
+# --- LOKAL (MySQL di laptop sendiri) ---
+db.url=jdbc:mysql://localhost:3306/db_magiq_waroenk_bikers?sslMode=DISABLED&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8&connectTimeout=10000
+db.user=root
+db.password=PASSWORD_MYSQL_LOKAL
+
+# --- CLOUD (Aiven) ---
+#db.url=jdbc:mysql://HOST_AIVEN:PORT/db_magiq_waroenk_bikers?sslMode=REQUIRED&useUnicode=true&characterEncoding=UTF-8&connectTimeout=10000&tcpKeepAlive=true&cachePrepStmts=true&prepStmtCacheSize=250&useLocalSessionState=true
+#db.user=avnadmin
+#db.password=PASSWORD_AIVEN

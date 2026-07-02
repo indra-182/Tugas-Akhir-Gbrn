@@ -1,0 +1,19 @@
+# Whitelist: hanya folder/file berikut yang masuk repo
+/*
+!/.gitignore
+!/build/
+/build/*
+!/build/classes/
+!/database/
+!/lib/
+!/nbproject/
+!/src/
+!/README.md
+!/build.xml
+!/manifest.mf
+
+# Machine-specific NetBeans files
+/nbproject/private/
+
+# Berisi kredensial database - jangan pernah di-commit
+config.properties
