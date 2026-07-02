@@ -17,3 +17,6 @@
 
 # Berisi kredensial database - jangan pernah di-commit
 config.properties
+
+# Template config juga tidak usah ikut repo
+config.properties.example
