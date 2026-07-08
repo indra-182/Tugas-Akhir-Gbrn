@@ -1,6 +1,7 @@
 package com.gibran.waroenkbikers.ui;
 
 import com.gibran.waroenkbikers.dao.BaristaDao;
+import com.gibran.waroenkbikers.dao.HasilRankingDao;
 import com.gibran.waroenkbikers.model.Barista;
 import com.gibran.waroenkbikers.util.DialogUtil;
 import java.awt.BorderLayout;
@@ -28,6 +29,7 @@ import java.util.regex.Pattern;
 
 public class BaristaPanel extends JPanel {
     private final BaristaDao baristaDao = new BaristaDao();
+    private final HasilRankingDao hasilRankingDao = new HasilRankingDao();
     private final BaristaTableModel tableModel = new BaristaTableModel();
     private final JTable tabel = new JTable(tableModel);
 
@@ -59,6 +61,7 @@ public class BaristaPanel extends JPanel {
 
         TampilanUtil.rapikanTabel(tabel);
         tabel.setRowSorter(penyaringTabel);
+        TampilanUtil.pasangKolomNomor(tabel);
         isiPanel.add(new JScrollPane(tabel), BorderLayout.CENTER);
         add(isiPanel, BorderLayout.CENTER);
     }
@@ -184,6 +187,7 @@ public class BaristaPanel extends JPanel {
     private void simpan() {
         try {
             baristaDao.tambah(bacaForm());
+            hasilRankingDao.hapusSemua();
             DialogUtil.showInfo(this, "Data barista berhasil disimpan.");
             bersihkanForm();
             muatData();
@@ -201,6 +205,7 @@ public class BaristaPanel extends JPanel {
             Barista barista = bacaForm();
             barista.setId(idTerpilih);
             baristaDao.ubah(barista);
+            hasilRankingDao.hapusSemua();
             DialogUtil.showInfo(this, "Data barista berhasil diubah.");
             bersihkanForm();
             muatData();
@@ -219,6 +224,7 @@ public class BaristaPanel extends JPanel {
         }
         try {
             baristaDao.hapus(idTerpilih);
+            hasilRankingDao.hapusSemua();
             DialogUtil.showInfo(this, "Data barista berhasil dihapus.");
             bersihkanForm();
             muatData();
@@ -256,7 +262,7 @@ public class BaristaPanel extends JPanel {
     }
 
     private static class BaristaTableModel extends AbstractTableModel {
-        private final String[] kolom = {"ID", "Kode Barista", "Nama", "Jabatan", "Status"};
+        private final String[] kolom = {"No", "Kode Barista", "Nama", "Jabatan", "Status"};
         private List<Barista> data = new ArrayList<>();
 
         public void setData(List<Barista> data) {
@@ -287,7 +293,7 @@ public class BaristaPanel extends JPanel {
         public Object getValueAt(int baris, int kolomIndex) {
             Barista barista = data.get(baris);
             switch (kolomIndex) {
-                case 0: return barista.getId();
+                case 0: return baris + 1;
                 case 1: return barista.getKodeBarista();
                 case 2: return barista.getNama();
                 case 3: return barista.getJabatan();

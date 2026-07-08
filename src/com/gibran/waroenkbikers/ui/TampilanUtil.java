@@ -1,6 +1,7 @@
 package com.gibran.waroenkbikers.ui;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Insets;
@@ -11,7 +12,10 @@ import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
 
 public final class TampilanUtil {
     public static final Color WARNA_GARIS = new Color(55, 65, 81);
@@ -112,5 +116,32 @@ public final class TampilanUtil {
         header.setFont(FONT_TEBAL);
         header.setBackground(new Color(243, 244, 246));
         header.setForeground(new Color(55, 65, 81));
+    }
+
+    public static void pasangKolomNomor(JTable tabel) {
+        DefaultTableCellRenderer renderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+                    boolean hasFocus, int row, int column) {
+                return super.getTableCellRendererComponent(table, row + 1, isSelected, hasFocus, row, column);
+            }
+        };
+        renderer.setHorizontalAlignment(SwingConstants.CENTER);
+
+        TableCellRenderer headerRendererAsli = tabel.getTableHeader().getDefaultRenderer();
+        TableCellRenderer headerRenderer = (table, value, isSelected, hasFocus, row, column) -> {
+            Component sel = headerRendererAsli.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            if (sel instanceof JLabel) {
+                ((JLabel) sel).setHorizontalAlignment(SwingConstants.CENTER);
+            }
+            return sel;
+        };
+
+        TableColumn kolomNomor = tabel.getColumnModel().getColumn(0);
+        kolomNomor.setCellRenderer(renderer);
+        kolomNomor.setHeaderRenderer(headerRenderer);
+        kolomNomor.setPreferredWidth(40);
+        kolomNomor.setMaxWidth(50);
+        kolomNomor.setMinWidth(30);
     }
 }

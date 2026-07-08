@@ -1,5 +1,6 @@
 package com.gibran.waroenkbikers.ui;
 
+import com.gibran.waroenkbikers.dao.HasilRankingDao;
 import com.gibran.waroenkbikers.dao.KriteriaDao;
 import com.gibran.waroenkbikers.model.Kriteria;
 import com.gibran.waroenkbikers.util.DialogUtil;
@@ -29,6 +30,7 @@ import java.util.regex.Pattern;
 
 public class KriteriaPanel extends JPanel {
     private final KriteriaDao kriteriaDao = new KriteriaDao();
+    private final HasilRankingDao hasilRankingDao = new HasilRankingDao();
     private final KriteriaTableModel tableModel = new KriteriaTableModel();
     private final JTable tabel = new JTable(tableModel);
 
@@ -60,6 +62,7 @@ public class KriteriaPanel extends JPanel {
 
         TampilanUtil.rapikanTabel(tabel);
         tabel.setRowSorter(penyaringTabel);
+        TampilanUtil.pasangKolomNomor(tabel);
         isiPanel.add(new JScrollPane(tabel), BorderLayout.CENTER);
         add(isiPanel, BorderLayout.CENTER);
     }
@@ -185,6 +188,7 @@ public class KriteriaPanel extends JPanel {
     private void simpan() {
         try {
             kriteriaDao.tambah(bacaForm());
+            hasilRankingDao.hapusSemua();
             DialogUtil.showInfo(this, "Data kriteria berhasil disimpan.");
             bersihkanForm();
             muatData();
@@ -202,6 +206,7 @@ public class KriteriaPanel extends JPanel {
             Kriteria kriteria = bacaForm();
             kriteria.setId(idTerpilih);
             kriteriaDao.ubah(kriteria);
+            hasilRankingDao.hapusSemua();
             DialogUtil.showInfo(this, "Data kriteria berhasil diubah.");
             bersihkanForm();
             muatData();
@@ -220,6 +225,7 @@ public class KriteriaPanel extends JPanel {
         }
         try {
             kriteriaDao.hapus(idTerpilih);
+            hasilRankingDao.hapusSemua();
             DialogUtil.showInfo(this, "Data kriteria berhasil dihapus.");
             bersihkanForm();
             muatData();
@@ -255,7 +261,7 @@ public class KriteriaPanel extends JPanel {
     }
 
     private static class KriteriaTableModel extends AbstractTableModel {
-        private final String[] kolom = {"ID", "Kode", "Nama Kriteria", "Bobot", "Jenis"};
+        private final String[] kolom = {"No", "Kode", "Nama Kriteria", "Bobot", "Jenis"};
         private List<Kriteria> data = new ArrayList<>();
 
         public void setData(List<Kriteria> data) {
@@ -286,7 +292,7 @@ public class KriteriaPanel extends JPanel {
         public Object getValueAt(int baris, int kolomIndex) {
             Kriteria kriteria = data.get(baris);
             switch (kolomIndex) {
-                case 0: return kriteria.getId();
+                case 0: return baris + 1;
                 case 1: return kriteria.getKode();
                 case 2: return kriteria.getNama();
                 case 3: return kriteria.getBobot();

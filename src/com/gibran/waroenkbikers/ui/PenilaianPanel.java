@@ -1,6 +1,7 @@
 package com.gibran.waroenkbikers.ui;
 
 import com.gibran.waroenkbikers.dao.BaristaDao;
+import com.gibran.waroenkbikers.dao.HasilRankingDao;
 import com.gibran.waroenkbikers.dao.KriteriaDao;
 import com.gibran.waroenkbikers.dao.PenilaianDao;
 import com.gibran.waroenkbikers.model.Barista;
@@ -35,6 +36,7 @@ public class PenilaianPanel extends JPanel {
     private final BaristaDao baristaDao = new BaristaDao();
     private final KriteriaDao kriteriaDao = new KriteriaDao();
     private final PenilaianDao penilaianDao = new PenilaianDao();
+    private final HasilRankingDao hasilRankingDao = new HasilRankingDao();
 
     private final JComboBox<Barista> baristaComboBox = new JComboBox<>();
     private final JTextField pencarianField = new TeksPlaceholderField(
@@ -62,6 +64,7 @@ public class PenilaianPanel extends JPanel {
 
         TampilanUtil.rapikanTabel(tabel);
         tabel.setRowSorter(penyaringTabel);
+        TampilanUtil.pasangKolomNomor(tabel);
         isiPanel.add(new JScrollPane(tabel), BorderLayout.CENTER);
         add(isiPanel, BorderLayout.CENTER);
     }
@@ -134,7 +137,7 @@ public class PenilaianPanel extends JPanel {
             penyaringTabel.setRowFilter(new RowFilter<PenilaianTableModel, Integer>() {
                 @Override
                 public boolean include(Entry<? extends PenilaianTableModel, ? extends Integer> entry) {
-                    String kode = String.valueOf(entry.getValue(0)).toLowerCase();
+                    String kode = String.valueOf(entry.getValue(1)).toLowerCase();
                     return kode.matches(pola);
                 }
             });
@@ -179,6 +182,7 @@ public class PenilaianPanel extends JPanel {
                 double nilai = tableModel.ambilNilai(i);
                 penilaianDao.simpan(baristaTerpilih.getId(), kriteria.getId(), nilai);
             }
+            hasilRankingDao.hapusSemua();
             DialogUtil.showInfo(this, "Penilaian berhasil disimpan.");
         } catch (SQLException ex) {
             DialogUtil.showError(this, ex.getMessage());
@@ -191,7 +195,7 @@ public class PenilaianPanel extends JPanel {
         private List<Double> daftarNilai = new ArrayList<>();
 
         private PenilaianTableModel() {
-            this.kolom = new String[]{"Kode", "Kriteria", "Bobot", "Tipe", "Nilai"};
+            this.kolom = new String[]{"No", "Kode", "Kriteria", "Bobot", "Tipe", "Nilai"};
         }
 
         public void setData(List<Kriteria> daftarKriteria, Map<Integer, Double> nilaiTersimpan) {
@@ -228,25 +232,26 @@ public class PenilaianPanel extends JPanel {
 
         @Override
         public boolean isCellEditable(int baris, int kolomIndex) {
-            return kolomIndex == 4;
+            return kolomIndex == 5;
         }
 
         @Override
         public Object getValueAt(int baris, int kolomIndex) {
             Kriteria kriteria = daftarKriteria.get(baris);
             switch (kolomIndex) {
-                case 0: return kriteria.getKode();
-                case 1: return kriteria.getNama();
-                case 2: return kriteria.getBobot();
-                case 3: return kriteria.getTipe();
-                case 4: return NumberUtil.format(daftarNilai.get(baris));
+                case 0: return baris + 1;
+                case 1: return kriteria.getKode();
+                case 2: return kriteria.getNama();
+                case 3: return kriteria.getBobot();
+                case 4: return kriteria.getTipe();
+                case 5: return NumberUtil.format(daftarNilai.get(baris));
                 default: return "";
             }
         }
 
         @Override
         public void setValueAt(Object nilaiBaru, int baris, int kolomIndex) {
-            if (kolomIndex == 4) {
+            if (kolomIndex == 5) {
                 try {
                     double nilai = NumberUtil.parseNonNegativeDouble(String.valueOf(nilaiBaru), "Nilai");
                     if (nilai > 100) {
