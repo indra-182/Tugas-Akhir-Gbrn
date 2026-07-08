@@ -7,11 +7,11 @@ import com.gibran.waroenkbikers.dao.PenilaianDao;
 import com.gibran.waroenkbikers.model.HasilRanking;
 import com.gibran.waroenkbikers.model.Barista;
 import com.gibran.waroenkbikers.model.Kriteria;
-import com.gibran.waroenkbikers.service.PerhitunganMagiqService;
 import com.gibran.waroenkbikers.util.DialogUtil;
 import com.gibran.waroenkbikers.util.NumberUtil;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Desktop;
 import java.awt.Font;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
@@ -26,17 +26,23 @@ import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.List;
 import javax.imageio.ImageIO;
+import javax.print.attribute.HashPrintRequestAttributeSet;
+import javax.print.attribute.PrintRequestAttributeSet;
+import javax.print.attribute.standard.Destination;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.SwingWorker;
 import javax.swing.table.DefaultTableModel;
 
 public class LaporanPanel extends JPanel {
@@ -181,11 +187,6 @@ public class LaporanPanel extends JPanel {
     }
 
     private void muatLaporanRanking() throws Exception {
-        if (!PerhitunganMagiqService.apakahPerhitunganSudahDiproses()) {
-            tampilkanPesanProsesPerhitungan();
-            return;
-        }
-
         List<HasilRanking> daftarRanking = hasilRankingDao.ambilSemua();
         if (daftarRanking.isEmpty()) {
             tampilkanPesanProsesPerhitungan();
@@ -213,8 +214,13 @@ public class LaporanPanel extends JPanel {
 
     private void cetakLaporanPdf() {
         String jenis = jenisLaporanComboBox.getSelectedItem().toString();
-        if (LAPORAN_DATA_RANKING.equals(jenis) && !PerhitunganMagiqService.apakahPerhitunganSudahDiproses()) {
-            DialogUtil.showWarning(this, "Proses Perhitungan Dahulu di Menu Perhitungan");
+        try {
+            if (LAPORAN_DATA_RANKING.equals(jenis) && hasilRankingDao.ambilSemua().isEmpty()) {
+                DialogUtil.showWarning(this, "Proses Perhitungan Dahulu di Menu Perhitungan");
+                return;
+            }
+        } catch (SQLException ex) {
+            DialogUtil.showError(this, ex.getMessage());
             return;
         }
 
@@ -223,15 +229,55 @@ public class LaporanPanel extends JPanel {
             return;
         }
 
+        String namaLaporan = jenis;
+        PrinterJob printerJob = PrinterJob.getPrinterJob();
+        printerJob.setJobName(namaLaporan);
+        printerJob.setPrintable(new CetakLaporanPrintable());
+
+        File folderUnduhan = new File(System.getProperty("user.home"), "Downloads");
+        File fileHasil = new File(folderUnduhan, namaLaporan + ".pdf");
+        PrintRequestAttributeSet atribut = new HashPrintRequestAttributeSet();
+        atribut.add(new Destination(fileHasil.toURI()));
+
         try {
-            PrinterJob printerJob = PrinterJob.getPrinterJob();
-            printerJob.setJobName(jenisLaporanComboBox.getSelectedItem().toString());
-            printerJob.setPrintable(new CetakLaporanPrintable());
-            if (printerJob.printDialog()) {
-                printerJob.print();
+            if (!printerJob.printDialog(atribut)) {
+                return;
             }
-        } catch (HeadlessException | PrinterException ex) {
+        } catch (HeadlessException ex) {
             DialogUtil.showError(this, ex.getMessage());
+            return;
+        }
+
+        JDialog dialogProses = DialogUtil.tampilkanProses(this, "Sedang mendownload " + namaLaporan + "...");
+        new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() throws PrinterException {
+                printerJob.print(atribut);
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                dialogProses.dispose();
+                try {
+                    get();
+                    bukaFileHasil(fileHasil);
+                } catch (Exception ex) {
+                    Throwable penyebab = ex.getCause() != null ? ex.getCause() : ex;
+                    DialogUtil.showError(LaporanPanel.this, penyebab.getMessage());
+                }
+            }
+        }.execute();
+    }
+
+    private void bukaFileHasil(File file) {
+        if (!file.exists() || !Desktop.isDesktopSupported()) {
+            return;
+        }
+        try {
+            Desktop.getDesktop().open(file);
+        } catch (IOException ex) {
+            DialogUtil.showWarning(this, "File tersimpan, tetapi gagal dibuka otomatis: " + ex.getMessage());
         }
     }
 
