@@ -10,6 +10,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class HasilRankingDao {
+    public void hapusSemua() throws SQLException {
+        String hapusSql = "DELETE FROM hasil_ranking";
+        Connection koneksi = null;
+        PreparedStatement perintahHapus = null;
+
+        try {
+            koneksi = DatabaseConnection.getConnection();
+            perintahHapus = koneksi.prepareStatement(hapusSql);
+            perintahHapus.executeUpdate();
+        } finally {
+            DatabaseConnection.closeQuietly(perintahHapus);
+            DatabaseConnection.closeQuietly(koneksi);
+        }
+    }
+
     public void gantiSemua(List<HasilRanking> daftarHasilRanking) throws SQLException {
         String hapusSql = "DELETE FROM hasil_ranking";
         String tambahSql = "INSERT INTO hasil_ranking "

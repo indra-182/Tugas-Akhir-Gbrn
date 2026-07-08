@@ -17,16 +17,10 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class PerhitunganMagiqService {
-    private static boolean perhitunganSudahDiproses = false;
-
     private final BaristaDao baristaDao = new BaristaDao();
     private final KriteriaDao kriteriaDao = new KriteriaDao();
     private final PenilaianDao penilaianDao = new PenilaianDao();
     private final HasilRankingDao hasilRankingDao = new HasilRankingDao();
-
-    public static boolean apakahPerhitunganSudahDiproses() {
-        return perhitunganSudahDiproses;
-    }
 
     public List<HasilRanking> hitungDanSimpan() throws SQLException {
         List<HasilRanking> daftarHasilRanking = hitungDetailDanSimpan().getDaftarHasilRanking();
@@ -37,7 +31,6 @@ public class PerhitunganMagiqService {
         PerhitunganDetail detail = hitungDetail();
         List<HasilRanking> daftarHasilRanking = detail.getDaftarHasilRanking();
         hasilRankingDao.gantiSemua(daftarHasilRanking);
-        perhitunganSudahDiproses = true;
         return detail;
     }
 
