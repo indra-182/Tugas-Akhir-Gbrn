@@ -114,6 +114,8 @@ public class PerhitunganMagiqPanel extends JPanel {
             DialogUtil.showInfo(this, "Perhitungan MAGIQ berhasil dilakukan.");
         } catch (SQLException ex) {
             DialogUtil.showError(this, ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            DialogUtil.showWarning(this, ex.getMessage());
         }
     }
 
