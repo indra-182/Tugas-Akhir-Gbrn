@@ -65,7 +65,7 @@ public class PenilaianDao {
 
     public void simpan(int idBarista, int idKriteria, double nilai) throws SQLException {
         String sql = "INSERT INTO penilaian (id_barista, id_kriteria, nilai) VALUES (?, ?, ?) "
-                + "ON DUPLICATE KEY UPDATE nilai = VALUES(nilai)";
+                + "ON CONFLICT (id_barista, id_kriteria) DO UPDATE SET nilai = EXCLUDED.nilai";
         Connection koneksi = null;
         PreparedStatement perintah = null;
 

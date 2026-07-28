@@ -18,14 +18,21 @@ public class PenggunaDao {
 
         try {
             koneksi = DatabaseConnection.getConnection();
+            System.out.println("[DEBUG] DB connected: " + (koneksi != null && !koneksi.isClosed()));
             perintah = koneksi.prepareStatement(sql);
             perintah.setString(1, username);
-            perintah.setString(2, PasswordUtil.sha256(password));
+            String generatedHash = PasswordUtil.sha256(password);
+            System.out.println("[DEBUG] Login attempt: username='" + username + "' password='****' hash='" + generatedHash + "'");
+            System.out.println("[DEBUG] SQL: " + sql);
+            perintah.setString(2, generatedHash);
             hasil = perintah.executeQuery();
+            System.out.println("[DEBUG] Query executed");
 
             if (!hasil.next()) {
+                System.out.println("[DEBUG] No matching row found");
                 return null;
             }
+            System.out.println("[DEBUG] Row found, user.id=" + hasil.getInt("id"));
 
             Pengguna pengguna = new Pengguna();
             pengguna.setId(hasil.getInt("id"));

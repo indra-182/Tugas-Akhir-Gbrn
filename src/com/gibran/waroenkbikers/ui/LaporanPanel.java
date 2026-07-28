@@ -26,6 +26,7 @@ import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -46,7 +47,7 @@ import javax.swing.SwingWorker;
 import javax.swing.table.DefaultTableModel;
 
 public class LaporanPanel extends JPanel {
-    private static final String LOKASI_LOGO = "C:\\Users\\mahad\\Downloads\\waroenk-bikers.jpg";
+    private static final String LOKASI_LOGO = "/assets/images/waroenk-bikers.jpg";
     private static final String NAMA_PERUSAHAAN = "WAROENK BIKERS";
     private static final String ALAMAT_BARIS_1 = "Jl. D. Tondano No.3, RT.1/RW.4, Bend. Hilir";
     private static final String ALAMAT_BARIS_2 = "Kec. Tanah Abang, Kota Jakarta Pusat";
@@ -321,9 +322,8 @@ public class LaporanPanel extends JPanel {
         }
 
         private Image muatLogo() {
-            try {
-                File fileLogo = new File(LOKASI_LOGO);
-                return fileLogo.exists() ? ImageIO.read(fileLogo) : null;
+            try (InputStream input = LaporanPanel.class.getResourceAsStream(LOKASI_LOGO)) {
+                return input == null ? null : ImageIO.read(input);
             } catch (IOException ex) {
                 return null;
             }

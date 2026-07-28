@@ -33,7 +33,7 @@ public final class DatabaseConnection {
         try {
             Class.forName(properties.getProperty("db.driver"));
         } catch (ClassNotFoundException ex) {
-            throw new SQLException("Driver MySQL tidak ditemukan. Tambahkan mysql-connector-j ke Libraries.", ex);
+            throw new SQLException("Driver PostgreSQL tidak ditemukan. Tambahkan postgresql-42.7.13.jar ke Libraries.", ex);
         }
 
         koneksiBersama = DriverManager.getConnection(

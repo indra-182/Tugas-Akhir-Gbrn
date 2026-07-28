@@ -9,8 +9,8 @@ Teknologi yang digunakan:
 - Java 1.8
 - Java Swing
 - NetBeans 8.2 (Ant project)
-- MySQL (lokal atau cloud Aiven)
-- JDBC + MySQL Connector/J 8.0.33
+- PostgreSQL melalui Supabase
+- PostgreSQL JDBC Driver 42.7.13
 - Metode MAGIQ
 
 ## Fitur
@@ -33,53 +33,51 @@ src/com/gibran/waroenkbikers
 ├── service   -> business logic, termasuk perhitungan MAGIQ
 ├── ui        -> Java Swing form/panel
 └── util      -> helper koneksi, dialog, angka, password
+
+src/assets/images
+└── waroenk-bikers.jpg -> logo laporan; dimuat sebagai resource internal
 ```
 
 ## Cara Menjalankan
 
-### 1. Import Database
+### 1. Import Database ke Supabase
 
-Jalankan MySQL lokal, lalu import file:
+Buka **Supabase Dashboard** -> project -> **SQL Editor**, lalu jalankan isi file:
 
 ```text
 database/db_magiq_waroenk_bikers.sql
 ```
 
-Bisa lewat phpMyAdmin atau command line:
-
-```text
-mysql -u root -p < database/db_magiq_waroenk_bikers.sql
-```
-
-Database yang dibuat bernama `db_magiq_waroenk_bikers`. File SQL menyediakan
-5 data barista, 6 kriteria racikan kopi, dan nilai penilaian awal.
+Skrip ini membuat ulang tabel pada skema `public`, sehingga jangan dijalankan
+pada database produksi yang sudah berisi data penting. File SQL menyediakan 5
+data barista, 6 kriteria racikan kopi, dan nilai penilaian awal.
 
 ### 2. Buat File Konfigurasi Database
 
 File `src/config.properties` **tidak ikut repository** karena berisi kredensial.
-Buat file tersebut secara manual dengan isi:
+Salin `src/config.properties.example` menjadi `src/config.properties`.
+
+Di Supabase Dashboard, klik **Connect** -> **Session Pooler** dan gunakan
+parameter yang ditampilkan di sana. Session Pooler dipakai agar aplikasi dapat
+terhubung dari jaringan IPv4 maupun IPv6.
+
+Isi file konfigurasi seperti ini:
 
 ```properties
-db.driver=com.mysql.cj.jdbc.Driver
-
-# --- LOKAL (MySQL di komputer sendiri) ---
-db.url=jdbc:mysql://localhost:3306/db_magiq_waroenk_bikers?sslMode=DISABLED&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8&connectTimeout=10000
-db.user=root
-db.password=ISI_PASSWORD_MYSQL
-
-# --- CLOUD (contoh: Aiven MySQL, wajib TLS) ---
-#db.url=jdbc:mysql://HOST_CLOUD:PORT/db_magiq_waroenk_bikers?sslMode=REQUIRED&useUnicode=true&characterEncoding=UTF-8&connectTimeout=10000&tcpKeepAlive=true&cachePrepStmts=true&prepStmtCacheSize=250&useLocalSessionState=true
-#db.user=USER_CLOUD
-#db.password=PASSWORD_CLOUD
+db.driver=org.postgresql.Driver
+db.url=jdbc:postgresql://aws-REGION.pooler.supabase.com:5432/postgres?sslmode=require&gssEncMode=disable&connectTimeout=10&tcpKeepAlive=true&ApplicationName=SPK-MAGIQ-Waroenk-Bikers
+db.user=postgres.PROJECT_REF
+db.password=ISI_PASSWORD_DATABASE_SUPABASE
 ```
 
-Aktifkan salah satu blok (LOKAL atau CLOUD) dengan memindahkan tanda `#`.
-File ini ter-bundle ke dalam JAR, jadi setiap kali diubah harus
-`Clean and Build` ulang.
+Gunakan host, user, dan password persis dari Supabase. Jangan gunakan direct
+connection `db.<project-ref>.supabase.co:5432` pada jaringan yang tidak
+mendukung IPv6. File konfigurasi dibundel ke JAR saat build; lakukan `Clean and
+Build` setiap kali mengubahnya.
 
-### 3. Library MySQL Connector/J
+### 3. Library PostgreSQL JDBC
 
-Driver sudah tersedia di `lib/mysql-connector-j-8.0.33.jar` dan sudah
+Driver tersedia di `lib/postgresql-42.7.13.jar` dan sudah
 terdaftar di project properties. Tidak perlu setup tambahan selama struktur
 folder tidak diubah.
 
@@ -89,8 +87,13 @@ folder tidak diubah.
 2. `File` -> `Open Project` -> pilih folder project ini.
 3. Klik kanan project -> `Clean and Build` -> `Run`.
 
-JAR hasil build ada di `dist/SPK-MAGIQ-Waroenk-Bikers.jar` dan bisa dijalankan
-langsung dengan double-click (butuh Java terpasang).
+JAR hasil build ada di `dist/SPK-MAGIQ-Waroenk-Bikers.jar`. Untuk menjalankan
+di luar NetBeans, letakkan driver pada `dist/lib/postgresql-42.7.13.jar`, lalu
+jalankan dari folder `dist`:
+
+```text
+java -jar SPK-MAGIQ-Waroenk-Bikers.jar
+```
 
 Default login:
 
@@ -136,4 +139,6 @@ Nilai MAGIQ = sum(bobot_kriteria * skor_lokal_alternatif)
 ## Catatan Pengembangan
 
 - Koneksi database memakai satu koneksi bersama (shared connection) agar tetap cepat saat memakai database cloud.
+- Logo laporan berada di `src/assets/images/waroenk-bikers.jpg`; jangan menggantinya dengan path absolut komputer.
+- Jangan commit atau membagikan `src/config.properties` karena file tersebut berisi kredensial database.
 - Keputusan akhir tetap berada pada pemilik usaha; sistem hanya alat bantu rekomendasi.
