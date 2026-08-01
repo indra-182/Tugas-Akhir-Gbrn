@@ -191,7 +191,7 @@ public class BaristaPanel extends JPanel {
             DialogUtil.showInfo(this, "Data barista berhasil disimpan.");
             bersihkanForm();
             muatData();
-        } catch (SQLException ex) {
+        } catch (SQLException | IllegalArgumentException ex) {
             DialogUtil.showError(this, ex.getMessage());
         }
     }
@@ -209,7 +209,7 @@ public class BaristaPanel extends JPanel {
             DialogUtil.showInfo(this, "Data barista berhasil diubah.");
             bersihkanForm();
             muatData();
-        } catch (SQLException ex) {
+        } catch (SQLException | IllegalArgumentException ex) {
             DialogUtil.showError(this, ex.getMessage());
         }
     }
@@ -247,7 +247,6 @@ public class BaristaPanel extends JPanel {
         barista.setNama(namaField.getText().trim());
         barista.setJabatan(jabatanField.getText().trim());
         barista.setDivisi("Barista");
-        barista.setTanggalMasuk("");
         barista.setStatus(statusComboBox.getSelectedItem().toString());
         return barista;
     }

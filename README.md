@@ -52,6 +52,11 @@ Skrip ini membuat ulang tabel pada skema `public`, sehingga jangan dijalankan
 pada database produksi yang sudah berisi data penting. File SQL menyediakan 5
 data barista, 6 kriteria racikan kopi, dan nilai penilaian awal.
 
+Untuk database Supabase yang sudah digunakan, buat backup lalu jalankan
+`database/migrations/20260801_drop_barista_entry_date.sql` di SQL Editor.
+Migrasi ini menghapus kolom legacy `date_entry` dan/atau `tanggal_masuk` dari
+tabel `barista` tanpa menghapus data barista lainnya.
+
 ### 2. Buat File Konfigurasi Database
 
 File `src/config.properties` **tidak ikut repository** karena berisi kredensial.

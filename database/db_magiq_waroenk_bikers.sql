@@ -21,7 +21,6 @@ CREATE TABLE barista (
   nama VARCHAR(100) NOT NULL,
   divisi VARCHAR(100),
   jabatan VARCHAR(100),
-  tanggal_masuk DATE NULL,
   status VARCHAR(10) NOT NULL DEFAULT 'AKTIF' CHECK (status IN ('AKTIF', 'NONAKTIF')),
   dibuat_pada TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   diubah_pada TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -82,12 +81,12 @@ FOR EACH ROW EXECUTE FUNCTION set_diubah_pada();
 INSERT INTO pengguna (username, password_hash, nama_lengkap, role) VALUES
 ('admin', 'e1e0797e52d34c7d8d7a3ab2db952aa2775d7df89eac54a655c294d2b6d56909', 'Administrator', 'ADMIN');
 
-INSERT INTO barista (kode_barista, nama, divisi, jabatan, tanggal_masuk, status) VALUES
-('B001', 'Ahmad Fadli', 'Bar', 'Barista', '2021-01-10', 'AKTIF'),
-('B002', 'Aldi Pratamas', 'Bar', 'Barista', '2021-01-18', 'AKTIF'),
-('B003', 'Andi Saputra', 'Quality Control', 'Senior Barista', '2021-02-03', 'AKTIF'),
-('B004', 'Arif Hidayat', 'Service', 'Barista', '2021-02-11', 'AKTIF'),
-('B005', 'Bagus Kurniawan', 'Training', 'Asisten Barista', '2021-02-20', 'AKTIF');
+INSERT INTO barista (kode_barista, nama, divisi, jabatan, status) VALUES
+('B001', 'Ahmad Fadli', 'Bar', 'Barista', 'AKTIF'),
+('B002', 'Aldi Pratamas', 'Bar', 'Barista', 'AKTIF'),
+('B003', 'Andi Saputra', 'Quality Control', 'Senior Barista', 'AKTIF'),
+('B004', 'Arif Hidayat', 'Service', 'Barista', 'AKTIF'),
+('B005', 'Bagus Kurniawan', 'Training', 'Asisten Barista', 'AKTIF');
 
 INSERT INTO kriteria (kode, nama, bobot, tipe, keterangan) VALUES
 ('C1', 'Rasa Kopi', 0.4083, 'BENEFIT', 'Tingkat keseimbangan rasa pahit, manis, dan keasaman.'),

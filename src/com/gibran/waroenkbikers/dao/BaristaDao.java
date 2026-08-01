@@ -11,7 +11,7 @@ import java.util.List;
 
 public class BaristaDao {
     private static final String KOLOM_BARISTA =
-            "id, kode_barista, nama, divisi, jabatan, tanggal_masuk, status";
+            "id, kode_barista, nama, divisi, jabatan, status";
 
     public List<Barista> ambilSemua() throws SQLException {
         String sql = "SELECT " + KOLOM_BARISTA + " FROM barista ORDER BY kode_barista";
@@ -29,14 +29,14 @@ public class BaristaDao {
     }
 
     public void tambah(Barista barista) throws SQLException {
-        String sql = "INSERT INTO barista (kode_barista, nama, divisi, jabatan, tanggal_masuk, status) "
-                + "VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO barista (kode_barista, nama, divisi, jabatan, status) "
+                + "VALUES (?, ?, ?, ?, ?)";
         simpan(sql, barista, false);
     }
 
     public void ubah(Barista barista) throws SQLException {
         String sql = "UPDATE barista SET kode_barista = ?, nama = ?, divisi = ?, jabatan = ?, "
-                + "tanggal_masuk = ?, status = ? WHERE id = ?";
+                + "status = ? WHERE id = ?";
         simpan(sql, barista, true);
     }
 
@@ -105,20 +105,15 @@ public class BaristaDao {
             perintah.setString(2, barista.getNama());
             perintah.setString(3, barista.getDivisi());
             perintah.setString(4, barista.getJabatan());
-            perintah.setString(5, kosongJadiNull(barista.getTanggalMasuk()));
-            perintah.setString(6, barista.getStatus());
+            perintah.setString(5, barista.getStatus());
             if (ubah) {
-                perintah.setInt(7, barista.getId());
+                perintah.setInt(6, barista.getId());
             }
             perintah.executeUpdate();
         } finally {
             DatabaseConnection.closeQuietly(perintah);
             DatabaseConnection.closeQuietly(koneksi);
         }
-    }
-
-    private String kosongJadiNull(String nilai) {
-        return nilai == null || nilai.trim().isEmpty() ? null : nilai.trim();
     }
 
     private Barista petakanBarista(ResultSet hasil) throws SQLException {
@@ -128,7 +123,6 @@ public class BaristaDao {
         barista.setNama(hasil.getString("nama"));
         barista.setDivisi(hasil.getString("divisi"));
         barista.setJabatan(hasil.getString("jabatan"));
-        barista.setTanggalMasuk(hasil.getString("tanggal_masuk"));
         barista.setStatus(hasil.getString("status"));
         return barista;
     }

@@ -6,7 +6,6 @@ public class Barista {
     private String nama;
     private String divisi;
     private String jabatan;
-    private String tanggalMasuk;
     private String status;
 
     public int getId() {
@@ -47,14 +46,6 @@ public class Barista {
 
     public void setJabatan(String jabatan) {
         this.jabatan = jabatan;
-    }
-
-    public String getTanggalMasuk() {
-        return tanggalMasuk;
-    }
-
-    public void setTanggalMasuk(String tanggalMasuk) {
-        this.tanggalMasuk = tanggalMasuk;
     }
 
     public String getStatus() {

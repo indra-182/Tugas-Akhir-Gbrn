@@ -1,9 +1,6 @@
 # Whitelist: hanya folder/file berikut yang masuk repo
 /*
 !/.gitignore
-!/build/
-/build/*
-!/build/classes/
 !/database/
 !/lib/
 !/nbproject/
