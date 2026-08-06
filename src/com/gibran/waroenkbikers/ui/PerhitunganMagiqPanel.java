@@ -10,6 +10,7 @@ import com.gibran.waroenkbikers.service.PerhitunganMagiqService;
 import com.gibran.waroenkbikers.service.PerhitunganMagiqService.PerhitunganDetail;
 import com.gibran.waroenkbikers.util.DialogUtil;
 import com.gibran.waroenkbikers.util.NumberUtil;
+import com.gibran.waroenkbikers.util.PrioritasKriteriaValidator;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Color;
@@ -115,7 +116,11 @@ public class PerhitunganMagiqPanel extends JPanel {
         } catch (SQLException ex) {
             DialogUtil.showError(this, ex.getMessage());
         } catch (IllegalArgumentException ex) {
-            DialogUtil.showWarning(this, ex.getMessage());
+            if (PrioritasKriteriaValidator.PESAN_PRIORITAS_DUPLIKAT.equals(ex.getMessage())) {
+                DialogUtil.showError(this, ex.getMessage());
+            } else {
+                DialogUtil.showWarning(this, ex.getMessage());
+            }
         }
     }
 
@@ -123,8 +128,8 @@ public class PerhitunganMagiqPanel extends JPanel {
         tabelPanel.removeAll();
         tambahBagianTabel("1. Data Penilaian Barista", buatModelMatriksKeputusan(detail));
         tambahBagianTabel("2. Bobot ROC Kriteria", buatModelBobotKriteria(detail));
-        tambahBagianTabel("3. Urutan Alternatif Pada Setiap Kriteria", buatModelUrutanAlternatif(detail));
-        tambahBagianTabel("4. Skor Lokal Alternatif", buatModelSkorLokal(detail));
+        tambahBagianTabel("3. Normalisasi Nilai", buatModelNormalisasi(detail));
+        tambahBagianTabel("4. Nilai Preferensi", buatModelNilaiPreferensi(detail));
         tambahBagianTabel("5. Hasil Ranking MAGIQ", buatModelHasilRanking(detail.getDaftarHasilRanking()));
         tabelPanel.revalidate();
         tabelPanel.repaint();
@@ -210,19 +215,9 @@ public class PerhitunganMagiqPanel extends JPanel {
         return model;
     }
 
-    private DefaultTableModel buatModelUrutanAlternatif(PerhitunganDetail detail) {
-        DefaultTableModel model = buatModelTidakBisaEdit(new Object[]{
-            "Kode", "Kriteria", "Tipe", "Urutan Alternatif"
-        });
-        detail.getDaftarUrutanAlternatif().forEach((data) -> {
-            model.addRow(data);
-        });
-        return model;
-    }
-
-    private DefaultTableModel buatModelSkorLokal(PerhitunganDetail detail) {
+    private DefaultTableModel buatModelNormalisasi(PerhitunganDetail detail) {
         DefaultTableModel model = buatModelTidakBisaEdit(buatKolomDataAwal(detail.getDaftarKriteria()));
-        double[][] skorLokal = detail.getSkorLokal();
+        double[][] matriksNormalisasi = detail.getMatriksNormalisasi();
         for (int i = 0; i < detail.getDaftarBarista().size(); i++) {
             Barista barista = detail.getDaftarBarista().get(i);
             Object[] baris = new Object[detail.getDaftarKriteria().size() + 3];
@@ -230,9 +225,25 @@ public class PerhitunganMagiqPanel extends JPanel {
             baris[1] = barista.getNama();
             baris[2] = barista.getJabatan();
             for (int j = 0; j < detail.getDaftarKriteria().size(); j++) {
-                baris[j + 3] = NumberUtil.format(skorLokal[i][j]);
+                baris[j + 3] = NumberUtil.format(matriksNormalisasi[i][j]);
             }
             model.addRow(baris);
+        }
+        return model;
+    }
+
+    private DefaultTableModel buatModelNilaiPreferensi(PerhitunganDetail detail) {
+        DefaultTableModel model = buatModelTidakBisaEdit(new Object[]{
+            "Kode Barista", "Nama Barista", "Nilai Preferensi"
+        });
+        double[] nilaiPreferensi = detail.getNilaiPreferensi();
+        for (int i = 0; i < detail.getDaftarBarista().size(); i++) {
+            Barista barista = detail.getDaftarBarista().get(i);
+            model.addRow(new Object[]{
+                barista.getKodeBarista(),
+                barista.getNama(),
+                NumberUtil.format(nilaiPreferensi[i])
+            });
         }
         return model;
     }

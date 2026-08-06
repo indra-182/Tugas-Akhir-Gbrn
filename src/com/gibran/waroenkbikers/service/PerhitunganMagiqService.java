@@ -7,15 +7,15 @@ import com.gibran.waroenkbikers.dao.PenilaianDao;
 import com.gibran.waroenkbikers.model.Barista;
 import com.gibran.waroenkbikers.model.HasilRanking;
 import com.gibran.waroenkbikers.model.Kriteria;
+import com.gibran.waroenkbikers.util.MagiqPreferenceCalculator;
+import com.gibran.waroenkbikers.util.NormalisasiNilaiCalculator;
+import com.gibran.waroenkbikers.util.PrioritasKriteriaValidator;
 import com.gibran.waroenkbikers.util.RocWeightCalculator;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 public class PerhitunganMagiqService {
     private final BaristaDao baristaDao = new BaristaDao();
@@ -48,10 +48,10 @@ public class PerhitunganMagiqService {
 
         double[][] matriksKeputusan = buatMatriksKeputusan(daftarBarista, daftarKriteria, matriksPenilaian);
         double[] bobotKriteria = hitungBobotKriteria(daftarKriteria);
-        double[][] skorLokal = hitungSkorLokalBarista(daftarBarista, daftarKriteria, matriksKeputusan);
-        List<HasilRanking> daftarHasilRanking = buatHasilRanking(daftarBarista, skorLokal, bobotKriteria);
+        double[][] matriksNormalisasi = hitungMatriksNormalisasi(daftarBarista, daftarKriteria, matriksKeputusan);
+        double[] nilaiPreferensi = MagiqPreferenceCalculator.hitungSemua(matriksNormalisasi, bobotKriteria);
+        List<HasilRanking> daftarHasilRanking = buatHasilRanking(daftarBarista, nilaiPreferensi);
         List<Object[]> daftarUrutanKriteria = buatDataUrutanKriteria(daftarKriteria, bobotKriteria);
-        List<Object[]> daftarUrutanAlternatif = buatDataUrutanAlternatif(daftarBarista, daftarKriteria, matriksKeputusan);
 
         Collections.sort(daftarHasilRanking, (HasilRanking hasilPertama, HasilRanking hasilKedua) -> {
             int hasilBanding = Double.compare(hasilKedua.getNilaiMagiq(), hasilPertama.getNilaiMagiq());
@@ -66,8 +66,8 @@ public class PerhitunganMagiqService {
         }
 
         return new PerhitunganDetail(daftarBarista, daftarKriteria, matriksKeputusan,
-                bobotKriteria, daftarUrutanKriteria, daftarUrutanAlternatif,
-                skorLokal, daftarHasilRanking);
+                bobotKriteria, daftarUrutanKriteria, matriksNormalisasi,
+                nilaiPreferensi, daftarHasilRanking);
     }
 
     public List<Object[]> ambilLaporanNormalisasi() throws SQLException {
@@ -78,7 +78,7 @@ public class PerhitunganMagiqService {
         validasiInput(daftarBarista, daftarKriteria, matriksPenilaian);
 
         double[][] matriksKeputusan = buatMatriksKeputusan(daftarBarista, daftarKriteria, matriksPenilaian);
-        double[][] skorLokal = hitungSkorLokalBarista(daftarBarista, daftarKriteria, matriksKeputusan);
+        double[][] matriksNormalisasi = hitungMatriksNormalisasi(daftarBarista, daftarKriteria, matriksKeputusan);
         List<Object[]> dataSkor = new ArrayList<>();
 
         for (int j = 0; j < daftarKriteria.size(); j++) {
@@ -90,7 +90,7 @@ public class PerhitunganMagiqService {
                     barista.getNama(),
                     kriteria.getKode(),
                     kriteria.getNama(),
-                    skorLokal[i][j]
+                    matriksNormalisasi[i][j]
                 });
             }
         }
@@ -158,114 +158,34 @@ public class PerhitunganMagiqService {
         return dataUrutan;
     }
 
-    private List<Object[]> buatDataUrutanAlternatif(List<Barista> daftarBarista, List<Kriteria> daftarKriteria,
+    private double[][] hitungMatriksNormalisasi(List<Barista> daftarBarista, List<Kriteria> daftarKriteria,
             double[][] matriksKeputusan) {
-        List<Object[]> dataUrutan = new ArrayList<>();
+        double[][] matriksNormalisasi = new double[daftarBarista.size()][daftarKriteria.size()];
         for (int j = 0; j < daftarKriteria.size(); j++) {
-            List<NilaiAlternatif> daftarNilai = buatDaftarNilaiAlternatif(daftarBarista, matriksKeputusan, j,
-                    Kriteria.COST.equals(daftarKriteria.get(j).getTipe()));
-            StringBuilder urutanAlternatif = new StringBuilder();
-            for (int i = 0; i < daftarNilai.size(); i++) {
-                if (i > 0) {
-                    urutanAlternatif.append(", ");
-                }
-                Barista barista = daftarBarista.get(daftarNilai.get(i).indeksBarista);
-                urutanAlternatif.append(barista.getKodeBarista());
-                urutanAlternatif.append(" - ");
-                urutanAlternatif.append(barista.getNama());
-                urutanAlternatif.append(" (");
-                urutanAlternatif.append(daftarNilai.get(i).nilai);
-                urutanAlternatif.append(")");
+            double[] nilaiKolom = new double[daftarBarista.size()];
+            for (int i = 0; i < daftarBarista.size(); i++) {
+                nilaiKolom[i] = matriksKeputusan[i][j];
             }
 
-            Kriteria kriteria = daftarKriteria.get(j);
-            dataUrutan.add(new Object[]{
-                kriteria.getKode(),
-                kriteria.getNama(),
-                kriteria.getTipe(),
-                urutanAlternatif.toString()
-            });
-        }
-        return dataUrutan;
-    }
-
-    private double[][] hitungSkorLokalBarista(List<Barista> daftarBarista, List<Kriteria> daftarKriteria,
-            double[][] matriksKeputusan) {
-        double[][] skorLokal = new double[daftarBarista.size()][daftarKriteria.size()];
-        double[] nilaiRocAlternatif = hitungNilaiRoc(daftarBarista.size());
-
-        for (int j = 0; j < daftarKriteria.size(); j++) {
-            List<NilaiAlternatif> daftarNilai = buatDaftarNilaiAlternatif(daftarBarista, matriksKeputusan, j,
-                    Kriteria.COST.equals(daftarKriteria.get(j).getTipe()));
-
-            // MAGIQ memberi skor ROC berdasarkan urutan alternatif pada setiap kriteria.
-            int posisiAwal = 0;
-            while (posisiAwal < daftarNilai.size()) {
-                int posisiAkhir = posisiAwal;
-                while (posisiAkhir + 1 < daftarNilai.size()
-                        && Double.compare(daftarNilai.get(posisiAwal).nilai,
-                                daftarNilai.get(posisiAkhir + 1).nilai) == 0) {
-                    posisiAkhir++;
-                }
-
-                double skorRataRata = hitungRataRataRoc(nilaiRocAlternatif, posisiAwal, posisiAkhir);
-                for (int posisi = posisiAwal; posisi <= posisiAkhir; posisi++) {
-                    NilaiAlternatif nilaiAlternatif = daftarNilai.get(posisi);
-                    skorLokal[nilaiAlternatif.indeksBarista][j] = skorRataRata;
-                }
-                posisiAwal = posisiAkhir + 1;
+            boolean cost = Kriteria.COST.equals(daftarKriteria.get(j).getTipe());
+            for (int i = 0; i < daftarBarista.size(); i++) {
+                matriksNormalisasi[i][j] = NormalisasiNilaiCalculator.hitungNilai(
+                        matriksKeputusan[i][j], nilaiKolom, cost);
             }
         }
-        return skorLokal;
+        return matriksNormalisasi;
     }
 
-    private List<NilaiAlternatif> buatDaftarNilaiAlternatif(List<Barista> daftarBarista,
-            double[][] matriksKeputusan, int indeksKriteria, final boolean cost) {
-        List<NilaiAlternatif> daftarNilai = new ArrayList<>();
-        for (int i = 0; i < daftarBarista.size(); i++) {
-            daftarNilai.add(new NilaiAlternatif(i, matriksKeputusan[i][indeksKriteria], daftarBarista.get(i).getNama()));
-        }
-
-        Collections.sort(daftarNilai, (NilaiAlternatif nilaiPertama, NilaiAlternatif nilaiKedua) -> {
-            int hasilBanding = cost
-                    ? Double.compare(nilaiPertama.nilai, nilaiKedua.nilai)
-                    : Double.compare(nilaiKedua.nilai, nilaiPertama.nilai);
-            if (hasilBanding != 0) {
-                return hasilBanding;
-            }
-            return nilaiPertama.nama.compareToIgnoreCase(nilaiKedua.nama);
-        });
-        return daftarNilai;
-    }
-
-    private double[] hitungNilaiRoc(int jumlahData) {
-        return RocWeightCalculator.hitungSemua(jumlahData);
-    }
-
-    private double hitungRataRataRoc(double[] nilaiRoc, int posisiAwal, int posisiAkhir) {
-        double total = 0.0;
-        for (int i = posisiAwal; i <= posisiAkhir; i++) {
-            total += nilaiRoc[i];
-        }
-        return total / ((posisiAkhir - posisiAwal) + 1);
-    }
-
-    private List<HasilRanking> buatHasilRanking(List<Barista> daftarBarista, double[][] skorLokal,
-            double[] bobotKriteria) {
+    private List<HasilRanking> buatHasilRanking(List<Barista> daftarBarista, double[] nilaiPreferensi) {
         List<HasilRanking> daftarHasilRanking = new ArrayList<>();
 
         for (int i = 0; i < daftarBarista.size(); i++) {
-            double nilaiMagiq = 0.0;
-            for (int j = 0; j < bobotKriteria.length; j++) {
-                nilaiMagiq += skorLokal[i][j] * bobotKriteria[j];
-            }
-
             Barista barista = daftarBarista.get(i);
             HasilRanking hasilRanking = new HasilRanking();
             hasilRanking.setIdBarista(barista.getId());
             hasilRanking.setKodeBarista(barista.getKodeBarista());
             hasilRanking.setNamaBarista(barista.getNama());
-            hasilRanking.setNilaiMagiq(nilaiMagiq);
+            hasilRanking.setNilaiMagiq(nilaiPreferensi[i]);
             daftarHasilRanking.add(hasilRanking);
         }
 
@@ -280,6 +200,7 @@ public class PerhitunganMagiqService {
         if (daftarKriteria.isEmpty()) {
             throw new IllegalArgumentException("Data kriteria belum tersedia.");
         }
+        validasiPrioritas(daftarKriteria);
 
         daftarKriteria.stream().map((kriteria) -> {
             if (kriteria.getBobot() <= 0) {
@@ -304,27 +225,39 @@ public class PerhitunganMagiqService {
         });
     }
 
+    private void validasiPrioritas(List<Kriteria> daftarKriteria) {
+        int[] prioritas = new int[daftarKriteria.size()];
+        for (int i = 0; i < daftarKriteria.size(); i++) {
+            prioritas[i] = daftarKriteria.get(i).getUrutanPrioritas();
+            if (prioritas[i] < 1 || prioritas[i] > daftarKriteria.size()) {
+                throw new IllegalArgumentException("Urutan prioritas harus antara 1 dan "
+                        + daftarKriteria.size() + ".");
+            }
+        }
+        PrioritasKriteriaValidator.validasiUnik(prioritas);
+    }
+
     public static class PerhitunganDetail {
         private final List<Barista> daftarBarista;
         private final List<Kriteria> daftarKriteria;
         private final double[][] matriksKeputusan;
         private final double[] bobotKriteria;
         private final List<Object[]> daftarUrutanKriteria;
-        private final List<Object[]> daftarUrutanAlternatif;
-        private final double[][] skorLokal;
+        private final double[][] matriksNormalisasi;
+        private final double[] nilaiPreferensi;
         private final List<HasilRanking> daftarHasilRanking;
 
         private PerhitunganDetail(List<Barista> daftarBarista, List<Kriteria> daftarKriteria,
                 double[][] matriksKeputusan, double[] bobotKriteria, List<Object[]> daftarUrutanKriteria,
-                List<Object[]> daftarUrutanAlternatif, double[][] skorLokal,
+                double[][] matriksNormalisasi, double[] nilaiPreferensi,
                 List<HasilRanking> daftarHasilRanking) {
             this.daftarBarista = daftarBarista;
             this.daftarKriteria = daftarKriteria;
             this.matriksKeputusan = matriksKeputusan;
             this.bobotKriteria = bobotKriteria;
             this.daftarUrutanKriteria = daftarUrutanKriteria;
-            this.daftarUrutanAlternatif = daftarUrutanAlternatif;
-            this.skorLokal = skorLokal;
+            this.matriksNormalisasi = matriksNormalisasi;
+            this.nilaiPreferensi = nilaiPreferensi;
             this.daftarHasilRanking = daftarHasilRanking;
         }
 
@@ -348,12 +281,12 @@ public class PerhitunganMagiqService {
             return daftarUrutanKriteria;
         }
 
-        public List<Object[]> getDaftarUrutanAlternatif() {
-            return daftarUrutanAlternatif;
+        public double[][] getMatriksNormalisasi() {
+            return matriksNormalisasi;
         }
 
-        public double[][] getSkorLokal() {
-            return skorLokal;
+        public double[] getNilaiPreferensi() {
+            return nilaiPreferensi;
         }
 
         public List<HasilRanking> getDaftarHasilRanking() {
@@ -371,15 +304,4 @@ public class PerhitunganMagiqService {
         }
     }
 
-    private static class NilaiAlternatif {
-        private final int indeksBarista;
-        private final double nilai;
-        private final String nama;
-
-        private NilaiAlternatif(int indeksBarista, double nilai, String nama) {
-            this.indeksBarista = indeksBarista;
-            this.nilai = nilai;
-            this.nama = nama;
-        }
-    }
 }

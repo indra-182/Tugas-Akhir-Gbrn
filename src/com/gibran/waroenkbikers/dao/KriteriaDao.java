@@ -2,6 +2,7 @@ package com.gibran.waroenkbikers.dao;
 
 import com.gibran.waroenkbikers.model.Kriteria;
 import com.gibran.waroenkbikers.util.DatabaseConnection;
+import com.gibran.waroenkbikers.util.PrioritasKriteriaValidator;
 import com.gibran.waroenkbikers.util.RocWeightCalculator;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -54,6 +55,7 @@ public class KriteriaDao {
             int prioritasBaru = kriteria.getUrutanPrioritas() <= 0
                     ? jumlahLama + 1 : kriteria.getUrutanPrioritas();
             validasiPrioritas(prioritasBaru, jumlahLama + 1);
+            validasiPrioritasUnik(daftarLama, prioritasBaru, 0);
 
             int prioritasMaksimal = prioritasMaksimal(daftarLama);
             int offsetSementara = prioritasMaksimal + 1;
@@ -97,6 +99,7 @@ public class KriteriaDao {
                     ? daftarLama.get(indeksLama).getUrutanPrioritas()
                     : kriteria.getUrutanPrioritas();
             validasiPrioritas(prioritasBaru, daftarLama.size());
+            validasiPrioritasUnik(daftarLama, prioritasBaru, kriteria.getId());
 
             int prioritasMaksimal = prioritasMaksimal(daftarLama);
             int offsetSementara = prioritasMaksimal + 1;
@@ -301,6 +304,19 @@ public class KriteriaDao {
         if (prioritas < 1 || prioritas > jumlahKriteria) {
             throw new IllegalArgumentException("Urutan prioritas harus antara 1 dan " + jumlahKriteria + ".");
         }
+    }
+
+    private void validasiPrioritasUnik(List<Kriteria> daftarKriteria, int prioritasBaru, int idDikecualikan) {
+        int jumlahPrioritas = daftarKriteria.size() + (idDikecualikan == 0 ? 1 : 0);
+        int[] semuaPrioritas = new int[jumlahPrioritas];
+        int indeks = 0;
+        for (Kriteria kriteria : daftarKriteria) {
+            if (kriteria.getId() != idDikecualikan) {
+                semuaPrioritas[indeks++] = kriteria.getUrutanPrioritas();
+            }
+        }
+        semuaPrioritas[indeks] = prioritasBaru;
+        PrioritasKriteriaValidator.validasiUnik(semuaPrioritas);
     }
 
     private void rollback(Connection koneksi, Exception penyebab) {

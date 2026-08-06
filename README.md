@@ -120,7 +120,7 @@ Password: admin123
 
 ## Ringkasan Metode MAGIQ
 
-MAGIQ menggunakan peringkat kepentingan kriteria dan peringkat alternatif pada setiap kriteria. Bobot dihitung dengan Rank Order Centroid (ROC):
+MAGIQ menggunakan urutan kepentingan kriteria, normalisasi nilai, dan bobot Rank Order Centroid (ROC) untuk menghasilkan nilai preferensi setiap barista:
 
 ```text
 w_j = (1 / m) * sum(1 / k), untuk k = j sampai m
@@ -131,15 +131,14 @@ Langkah perhitungan:
 1. Menentukan alternatif barista.
 2. Menentukan kriteria dan urutan prioritas kriteria.
 3. Menghitung bobot kriteria menggunakan ROC.
-4. Mengurutkan barista pada setiap kriteria berdasarkan nilai penilaian.
-5. Menghitung skor lokal alternatif menggunakan ROC.
-6. Menghitung nilai akhir MAGIQ:
+4. Melakukan normalisasi nilai pada setiap kriteria; kriteria benefit menggunakan nilai dibagi nilai maksimum, sedangkan kriteria cost menggunakan nilai minimum dibagi nilai alternatif.
+5. Menghitung nilai preferensi setiap barista:
 
 ```text
-Nilai MAGIQ = sum(bobot_kriteria * skor_lokal_alternatif)
+Nilai MAGIQ = sum(bobot_kriteria * nilai_normalisasi)
 ```
 
-7. Ranking ditentukan dari nilai MAGIQ terbesar ke terkecil.
+6. Ranking ditentukan dari nilai MAGIQ terbesar ke terkecil.
 
 ## Catatan Pengembangan
 

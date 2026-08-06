@@ -5,6 +5,7 @@ import com.gibran.waroenkbikers.dao.KriteriaDao;
 import com.gibran.waroenkbikers.model.Kriteria;
 import com.gibran.waroenkbikers.util.DialogUtil;
 import com.gibran.waroenkbikers.util.NumberUtil;
+import com.gibran.waroenkbikers.util.PrioritasKriteriaValidator;
 import com.gibran.waroenkbikers.util.RocWeightCalculator;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -216,7 +217,7 @@ public class KriteriaPanel extends JPanel {
             muatData();
             bersihkanForm();
         } catch (IllegalArgumentException ex) {
-            DialogUtil.showWarning(this, ex.getMessage());
+            tampilkanPesanValidasi(ex);
         } catch (SQLException ex) {
             DialogUtil.showError(this, ex.getMessage());
         }
@@ -236,7 +237,7 @@ public class KriteriaPanel extends JPanel {
             muatData();
             bersihkanForm();
         } catch (IllegalArgumentException ex) {
-            DialogUtil.showWarning(this, ex.getMessage());
+            tampilkanPesanValidasi(ex);
         } catch (SQLException ex) {
             DialogUtil.showError(this, ex.getMessage());
         }
@@ -279,6 +280,7 @@ public class KriteriaPanel extends JPanel {
         if (urutanPrioritas < 1 || urutanPrioritas > jumlahKriteria) {
             throw new IllegalArgumentException("Urutan Prioritas harus antara 1 dan " + jumlahKriteria + ".");
         }
+        validasiPrioritasTidakDuplikat(urutanPrioritas, jumlahKriteria);
 
         Kriteria kriteria = new Kriteria();
         kriteria.setKode(kodeField.getText().trim());
@@ -288,6 +290,27 @@ public class KriteriaPanel extends JPanel {
         kriteria.setTipe(tipeComboBox.getSelectedItem().toString());
         kriteria.setKeterangan("");
         return kriteria;
+    }
+
+    private void validasiPrioritasTidakDuplikat(int prioritasBaru, int jumlahKriteria) {
+        int[] semuaPrioritas = new int[jumlahKriteria];
+        int indeks = 0;
+        for (int i = 0; i < tableModel.getRowCount(); i++) {
+            Kriteria kriteriaLama = tableModel.ambilKriteria(i);
+            if (kriteriaLama.getId() != idTerpilih) {
+                semuaPrioritas[indeks++] = kriteriaLama.getUrutanPrioritas();
+            }
+        }
+        semuaPrioritas[indeks] = prioritasBaru;
+        PrioritasKriteriaValidator.validasiUnik(semuaPrioritas);
+    }
+
+    private void tampilkanPesanValidasi(IllegalArgumentException ex) {
+        if (PrioritasKriteriaValidator.PESAN_PRIORITAS_DUPLIKAT.equals(ex.getMessage())) {
+            DialogUtil.showError(this, ex.getMessage());
+        } else {
+            DialogUtil.showWarning(this, ex.getMessage());
+        }
     }
 
     private void bersihkanForm() {
