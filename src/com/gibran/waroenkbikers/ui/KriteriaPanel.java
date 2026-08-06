@@ -5,6 +5,7 @@ import com.gibran.waroenkbikers.dao.KriteriaDao;
 import com.gibran.waroenkbikers.model.Kriteria;
 import com.gibran.waroenkbikers.util.DialogUtil;
 import com.gibran.waroenkbikers.util.NumberUtil;
+import com.gibran.waroenkbikers.util.RocWeightCalculator;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridBagConstraints;
@@ -36,6 +37,7 @@ public class KriteriaPanel extends JPanel {
 
     private final JTextField kodeField = new JTextField(18);
     private final JTextField namaField = new JTextField(18);
+    private final JTextField urutanPrioritasField = new JTextField(18);
     private final JTextField bobotField = new JTextField(18);
     private final JTextField pencarianField = new TeksPlaceholderField(
             "Cari berdasarkan kode kriteria", 18);
@@ -48,9 +50,11 @@ public class KriteriaPanel extends JPanel {
         setLayout(new BorderLayout(10, 20));
         setBackground(Color.WHITE);
         setBorder(BorderFactory.createEmptyBorder(32, 32, 28, 32));
+        bobotField.setEnabled(false);
         buatTampilan();
         pasangEvent();
         muatData();
+        bersihkanForm();
     }
 
     private void buatTampilan() {
@@ -82,9 +86,10 @@ public class KriteriaPanel extends JPanel {
 
         tambahField(formPanel, batas, 0, "Kode", kodeField);
         tambahField(formPanel, batas, 1, "Nama Kriteria", namaField);
-        tambahField(formPanel, batas, 2, "Bobot", bobotField);
-        tambahField(formPanel, batas, 3, "Jenis", tipeComboBox);
-        tambahField(formPanel, batas, 4, "Search Data", pencarianField);
+        tambahField(formPanel, batas, 2, "Urutan Prioritas", urutanPrioritasField);
+        tambahField(formPanel, batas, 3, "Bobot", bobotField);
+        tambahField(formPanel, batas, 4, "Jenis", tipeComboBox);
+        tambahField(formPanel, batas, 5, "Search Data", pencarianField);
 
         JPanel tombolPanel = new JPanel(new GridBagLayout());
         tombolPanel.setBackground(Color.WHITE);
@@ -147,6 +152,23 @@ public class KriteriaPanel extends JPanel {
             }
         });
 
+        urutanPrioritasField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                perbaruiPreviewBobot();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                perbaruiPreviewBobot();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                perbaruiPreviewBobot();
+            }
+        });
+
         tabel.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && tabel.getSelectedRow() >= 0) {
                 int baris = tabel.convertRowIndexToModel(tabel.getSelectedRow());
@@ -154,6 +176,7 @@ public class KriteriaPanel extends JPanel {
                 idTerpilih = kriteria.getId();
                 kodeField.setText(kriteria.getKode());
                 namaField.setText(kriteria.getNama());
+                urutanPrioritasField.setText(String.valueOf(kriteria.getUrutanPrioritas()));
                 bobotField.setText(String.valueOf(kriteria.getBobot()));
                 tipeComboBox.setSelectedItem(kriteria.getTipe());
             }
@@ -169,8 +192,8 @@ public class KriteriaPanel extends JPanel {
             penyaringTabel.setRowFilter(new RowFilter<KriteriaTableModel, Integer>() {
                 @Override
                 public boolean include(Entry<? extends KriteriaTableModel, ? extends Integer> entry) {
-                    String kode = String.valueOf(entry.getValue(1)).toLowerCase();
-                    String namaKriteria = String.valueOf(entry.getValue(2)).toLowerCase();
+                    String kode = String.valueOf(entry.getValue(2)).toLowerCase();
+                    String namaKriteria = String.valueOf(entry.getValue(3)).toLowerCase();
                     return kode.matches(pola) || namaKriteria.matches(pola);
                 }
             });
@@ -190,8 +213,10 @@ public class KriteriaPanel extends JPanel {
             kriteriaDao.tambah(bacaForm());
             hasilRankingDao.hapusSemua();
             DialogUtil.showInfo(this, "Data kriteria berhasil disimpan.");
-            bersihkanForm();
             muatData();
+            bersihkanForm();
+        } catch (IllegalArgumentException ex) {
+            DialogUtil.showWarning(this, ex.getMessage());
         } catch (SQLException ex) {
             DialogUtil.showError(this, ex.getMessage());
         }
@@ -208,8 +233,10 @@ public class KriteriaPanel extends JPanel {
             kriteriaDao.ubah(kriteria);
             hasilRankingDao.hapusSemua();
             DialogUtil.showInfo(this, "Data kriteria berhasil diubah.");
-            bersihkanForm();
             muatData();
+            bersihkanForm();
+        } catch (IllegalArgumentException ex) {
+            DialogUtil.showWarning(this, ex.getMessage());
         } catch (SQLException ex) {
             DialogUtil.showError(this, ex.getMessage());
         }
@@ -227,8 +254,8 @@ public class KriteriaPanel extends JPanel {
             kriteriaDao.hapus(idTerpilih);
             hasilRankingDao.hapusSemua();
             DialogUtil.showInfo(this, "Data kriteria berhasil dihapus.");
-            bersihkanForm();
             muatData();
+            bersihkanForm();
         } catch (SQLException ex) {
             DialogUtil.showError(this, ex.getMessage());
         }
@@ -237,15 +264,27 @@ public class KriteriaPanel extends JPanel {
     private Kriteria bacaForm() {
         if (kodeField.getText().trim().isEmpty()
                 || namaField.getText().trim().isEmpty()
-                || bobotField.getText().trim().isEmpty()
+                || urutanPrioritasField.getText().trim().isEmpty()
                 || tipeComboBox.getSelectedItem() == null
                 || tipeComboBox.getSelectedItem().toString().trim().isEmpty()) {
             throw new IllegalArgumentException("Semua field data kriteria wajib diisi.");
         }
+        int jumlahKriteria = tableModel.getRowCount() + (idTerpilih == 0 ? 1 : 0);
+        int urutanPrioritas;
+        try {
+            urutanPrioritas = Integer.parseInt(urutanPrioritasField.getText().trim());
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException("Urutan Prioritas harus berupa bilangan bulat.");
+        }
+        if (urutanPrioritas < 1 || urutanPrioritas > jumlahKriteria) {
+            throw new IllegalArgumentException("Urutan Prioritas harus antara 1 dan " + jumlahKriteria + ".");
+        }
+
         Kriteria kriteria = new Kriteria();
         kriteria.setKode(kodeField.getText().trim());
         kriteria.setNama(namaField.getText().trim());
-        kriteria.setBobot(NumberUtil.parsePositiveDouble(bobotField.getText(), "Bobot"));
+        kriteria.setUrutanPrioritas(urutanPrioritas);
+        kriteria.setBobot(RocWeightCalculator.hitungBobot(urutanPrioritas, jumlahKriteria));
         kriteria.setTipe(tipeComboBox.getSelectedItem().toString());
         kriteria.setKeterangan("");
         return kriteria;
@@ -255,13 +294,31 @@ public class KriteriaPanel extends JPanel {
         idTerpilih = 0;
         kodeField.setText("");
         namaField.setText("");
-        bobotField.setText("");
+        int urutanPrioritasBaru = tableModel.getRowCount() + 1;
+        urutanPrioritasField.setText(String.valueOf(urutanPrioritasBaru));
+        bobotField.setText(NumberUtil.format(
+                RocWeightCalculator.hitungBobot(urutanPrioritasBaru, urutanPrioritasBaru)));
         tipeComboBox.setSelectedIndex(0);
         tabel.clearSelection();
     }
 
+    private void perbaruiPreviewBobot() {
+        int jumlahKriteria = tableModel.getRowCount() + (idTerpilih == 0 ? 1 : 0);
+        try {
+            int urutanPrioritas = Integer.parseInt(urutanPrioritasField.getText().trim());
+            if (urutanPrioritas < 1 || urutanPrioritas > jumlahKriteria) {
+                bobotField.setText("");
+                return;
+            }
+            bobotField.setText(NumberUtil.format(
+                    RocWeightCalculator.hitungBobot(urutanPrioritas, jumlahKriteria)));
+        } catch (RuntimeException ex) {
+            bobotField.setText("");
+        }
+    }
+
     private static class KriteriaTableModel extends AbstractTableModel {
-        private final String[] kolom = {"No", "Kode", "Nama Kriteria", "Bobot", "Jenis"};
+        private final String[] kolom = {"No", "Urutan Prioritas", "Kode", "Nama Kriteria", "Bobot", "Jenis"};
         private List<Kriteria> data = new ArrayList<>();
 
         public void setData(List<Kriteria> data) {
@@ -293,10 +350,11 @@ public class KriteriaPanel extends JPanel {
             Kriteria kriteria = data.get(baris);
             switch (kolomIndex) {
                 case 0: return baris + 1;
-                case 1: return kriteria.getKode();
-                case 2: return kriteria.getNama();
-                case 3: return kriteria.getBobot();
-                case 4: return kriteria.getTipe();
+                case 1: return kriteria.getUrutanPrioritas();
+                case 2: return kriteria.getKode();
+                case 3: return kriteria.getNama();
+                case 4: return kriteria.getBobot();
+                case 5: return kriteria.getTipe();
                 default: return "";
             }
         }

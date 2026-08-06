@@ -31,10 +31,12 @@ CREATE TABLE kriteria (
   kode VARCHAR(10) NOT NULL UNIQUE,
   nama VARCHAR(100) NOT NULL,
   bobot DECIMAL(10,4) NOT NULL,
+  urutan_prioritas INTEGER NOT NULL,
   tipe VARCHAR(10) NOT NULL DEFAULT 'BENEFIT' CHECK (tipe IN ('BENEFIT', 'COST')),
   keterangan VARCHAR(255),
   dibuat_pada TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  diubah_pada TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  diubah_pada TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT uq_kriteria_urutan_prioritas UNIQUE (urutan_prioritas)
 );
 
 CREATE TABLE penilaian (
@@ -88,13 +90,13 @@ INSERT INTO barista (kode_barista, nama, divisi, jabatan, status) VALUES
 ('B004', 'Arif Hidayat', 'Service', 'Barista', 'AKTIF'),
 ('B005', 'Bagus Kurniawan', 'Training', 'Asisten Barista', 'AKTIF');
 
-INSERT INTO kriteria (kode, nama, bobot, tipe, keterangan) VALUES
-('C1', 'Rasa Kopi', 0.4083, 'BENEFIT', 'Tingkat keseimbangan rasa pahit, manis, dan keasaman.'),
-('C2', 'Aroma', 0.2417, 'BENEFIT', 'Keharuman kopi yang dihasilkan.'),
-('C3', 'Penyajian', 0.1583, 'BENEFIT', 'Tampilan dan kerapihan penyajian kopi.'),
-('C4', 'Konsistensi Racikan', 0.1028, 'BENEFIT', 'Konsistensi rasa antara satu penyajian dengan lainnya.'),
-('C5', 'Kecepatan Penyajian', 0.0611, 'COST', 'Waktu yang dibutuhkan barista dalam menyajikan kopi; semakin singkat semakin baik.'),
-('C6', 'Stabilitas Suhu Penyajian', 0.0278, 'COST', 'Tingkat kestabilan suhu kopi saat disajikan yang diukur menggunakan alat termometer; semakin kecil penyimpangan suhu semakin baik.');
+INSERT INTO kriteria (kode, nama, bobot, urutan_prioritas, tipe, keterangan) VALUES
+('C1', 'Rasa Kopi', 0.4083, 1, 'BENEFIT', 'Tingkat keseimbangan rasa pahit, manis, dan keasaman.'),
+('C2', 'Aroma', 0.2417, 2, 'BENEFIT', 'Keharuman kopi yang dihasilkan.'),
+('C3', 'Penyajian', 0.1583, 3, 'BENEFIT', 'Tampilan dan kerapihan penyajian kopi.'),
+('C4', 'Konsistensi Racikan', 0.1028, 4, 'BENEFIT', 'Konsistensi rasa antara satu penyajian dengan lainnya.'),
+('C5', 'Kecepatan Penyajian', 0.0611, 5, 'COST', 'Waktu yang dibutuhkan barista dalam menyajikan kopi; semakin singkat semakin baik.'),
+('C6', 'Stabilitas Suhu Penyajian', 0.0278, 6, 'COST', 'Tingkat kestabilan suhu kopi saat disajikan yang diukur menggunakan alat termometer; semakin kecil penyimpangan suhu semakin baik.');
 
 -- Nilai penilaian eksplisit untuk enam kriteria.
 INSERT INTO penilaian (id_barista, id_kriteria, nilai)

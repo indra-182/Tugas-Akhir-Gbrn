@@ -8,6 +8,7 @@ public class Kriteria {
     private String kode;
     private String nama;
     private double bobot;
+    private int urutanPrioritas;
     private String tipe;
     private String keterangan;
 
@@ -41,6 +42,14 @@ public class Kriteria {
 
     public void setBobot(double bobot) {
         this.bobot = bobot;
+    }
+
+    public int getUrutanPrioritas() {
+        return urutanPrioritas;
+    }
+
+    public void setUrutanPrioritas(int urutanPrioritas) {
+        this.urutanPrioritas = urutanPrioritas;
     }
 
     public String getTipe() {

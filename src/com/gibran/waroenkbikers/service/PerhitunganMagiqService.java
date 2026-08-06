@@ -7,6 +7,7 @@ import com.gibran.waroenkbikers.dao.PenilaianDao;
 import com.gibran.waroenkbikers.model.Barista;
 import com.gibran.waroenkbikers.model.HasilRanking;
 import com.gibran.waroenkbikers.model.Kriteria;
+import com.gibran.waroenkbikers.util.RocWeightCalculator;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -114,7 +115,7 @@ public class PerhitunganMagiqService {
 
     private double[] hitungBobotKriteria(List<Kriteria> daftarKriteria) {
         List<UrutanKriteria> daftarUrutan = buatDaftarUrutanKriteria(daftarKriteria);
-        double[] nilaiRoc = hitungNilaiRoc(daftarKriteria.size());
+        double[] nilaiRoc = RocWeightCalculator.hitungSemua(daftarKriteria.size());
         double[] bobotKriteria = new double[daftarKriteria.size()];
         for (int urutan = 0; urutan < daftarUrutan.size(); urutan++) {
             bobotKriteria[daftarUrutan.get(urutan).indeks] = nilaiRoc[urutan];
@@ -129,7 +130,8 @@ public class PerhitunganMagiqService {
         }
 
         Collections.sort(daftarUrutan, (UrutanKriteria dataPertama, UrutanKriteria dataKedua) -> {
-            int hasilBanding = Double.compare(dataKedua.kriteria.getBobot(), dataPertama.kriteria.getBobot());
+            int hasilBanding = Integer.compare(dataPertama.kriteria.getUrutanPrioritas(),
+                    dataKedua.kriteria.getUrutanPrioritas());
             if (hasilBanding != 0) {
                 return hasilBanding;
             }
@@ -145,7 +147,7 @@ public class PerhitunganMagiqService {
         for (int i = 0; i < daftarUrutan.size(); i++) {
             Kriteria kriteria = daftarUrutan.get(i).kriteria;
             dataUrutan.add(new Object[]{
-                i + 1,
+                kriteria.getUrutanPrioritas(),
                 kriteria.getKode(),
                 kriteria.getNama(),
                 kriteria.getBobot(),
@@ -237,15 +239,7 @@ public class PerhitunganMagiqService {
     }
 
     private double[] hitungNilaiRoc(int jumlahData) {
-        double[] nilaiRoc = new double[jumlahData];
-        for (int urutan = 1; urutan <= jumlahData; urutan++) {
-            double total = 0.0;
-            for (int pembagi = urutan; pembagi <= jumlahData; pembagi++) {
-                total += 1.0 / pembagi;
-            }
-            nilaiRoc[urutan - 1] = total / jumlahData;
-        }
-        return nilaiRoc;
+        return RocWeightCalculator.hitungSemua(jumlahData);
     }
 
     private double hitungRataRataRoc(double[] nilaiRoc, int posisiAwal, int posisiAkhir) {
