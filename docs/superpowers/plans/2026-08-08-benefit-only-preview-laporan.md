@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Menghapus tipe benefit/cost, menyelaraskan data awal dengan dokumen penelitian, dan menyediakan preview laporan Swing sebelum cetak/PDF.
+**Goal:** Menghapus tipe benefit/cost, menyediakan 100 data awal barista beserta Excel satu sheet, dan menyediakan preview laporan Swing sebelum cetak/PDF.
 
 **Architecture:** Semua kriteria diperlakukan sebagai benefit oleh satu normalizer murni; model, DAO, UI, dan SQL tidak lagi menyimpan atribut tipe. `LaporanPanel` memegang satu snapshot waktu serta satu `Printable`, lalu merendernya di dialog preview dan mengirim objek yang sama ke `PrinterJob`.
 
@@ -14,7 +14,9 @@
 - Jangan menambah dependency atau mengubah lockfile/library.
 - Jangan membaca atau menampilkan kredensial dari `src/config.properties`.
 - Hapus `tipe`, `BENEFIT`, `COST`, dan istilah UI `Jenis` dari model, SQL, DAO, kalkulasi, dan laporan; jangan sekadar menyembunyikannya.
-- Data SQL awal wajib memiliki tepat tiga barista aktif: `Barista A`, `Barista B`, `Barista C` dengan kode B001–B003.
+- Data SQL awal wajib memiliki tepat 100 barista aktif dengan kode B001–B100 dan nama `Barista A` hingga `Barista VVVV` menurut blok pengulangan huruf 26-an.
+- Nilai C1–C6 harus deterministik, dalam rentang 60–100, dan setiap nilai harus kelipatan 5.
+- Excel `output/data-barista-dan-penilaian.xlsx` wajib memiliki satu sheet, `Data Barista dan Penilaian`, dengan tepat 100 baris data.
 - Format tanda tangan wajib `Jakarta, EEEE d MMMM yyyy` dengan locale `id_ID`, misalnya `Jakarta, Minggu 8 Agustus 2026`.
 
 ---
@@ -144,11 +146,12 @@ git commit -m "refactor: remove criterion type fields"
 **Files:**
 - Modify: `database/db_magiq_waroenk_bikers.sql`
 - Create: `database/migrations/20260808_drop_kriteria_type.sql`
+- Create: `output/data-barista-dan-penilaian.xlsx`
 - Modify: `README.md`
 
 **Interfaces:**
 - Consumes: tabel `kriteria` tanpa kolom `tipe`; relasi `penilaian` tetap mengacu pada ID kriteria/barista.
-- Produces: skrip instalasi baru berisi 3×6 nilai acuan dan migrasi idempoten yang tidak menghapus barista/penilaian existing.
+- Produces: skrip instalasi baru berisi 100×6 nilai acuan, Excel satu sheet yang sama, dan migrasi idempoten yang tidak menghapus barista/penilaian existing.
 
 - [ ] **Step 1: Tulis verifikasi SQL yang akan gagal terhadap seed lama.**
 
@@ -157,8 +160,8 @@ Tambahkan blok berikut ke akhir skrip inisialisasi sementara untuk dipakai setel
 ```sql
 DO $$
 BEGIN
-  IF (SELECT COUNT(*) FROM barista) <> 3 OR (SELECT COUNT(*) FROM penilaian) <> 18 THEN
-    RAISE EXCEPTION 'Seed must contain exactly 3 baristas and 18 assessments';
+  IF (SELECT COUNT(*) FROM barista) <> 100 OR (SELECT COUNT(*) FROM penilaian) <> 600 THEN
+    RAISE EXCEPTION 'Seed must contain exactly 100 baristas and 600 assessments';
   END IF;
 END;
 $$;
@@ -174,15 +177,32 @@ Expected: hasil menunjukkan data/tipe lama sebelum diubah.
 
 - [ ] **Step 3: Perbarui SQL dan tulis migrasi non-destruktif.**
 
-Hilangkan definisi `tipe` dan constraint `CHECK` dari `CREATE TABLE kriteria`, lalu hilangkan kolom/nilai tipe dari INSERT kriteria. Seed barista:
+Hilangkan definisi `tipe` dan constraint `CHECK` dari `CREATE TABLE kriteria`, lalu hilangkan kolom/nilai tipe dari INSERT kriteria. Seed barista harus dibangun dari `generate_series(0, 99)` agar konsisten dengan Excel:
 
 ```sql
-('B001', 'Barista A', 'Bar', 'Barista', 'AKTIF'),
-('B002', 'Barista B', 'Bar', 'Barista', 'AKTIF'),
-('B003', 'Barista C', 'Bar', 'Barista', 'AKTIF');
+INSERT INTO barista (kode_barista, nama, divisi, jabatan, status)
+SELECT 'B' || LPAD((i + 1)::TEXT, 3, '0'),
+       'Barista ' || REPEAT(CHR(65 + (i % 26)), (i / 26) + 1),
+       'Bar', 'Barista', 'AKTIF'
+FROM generate_series(0, 99) AS data(i);
 ```
 
 Seed C1–C6 harus memakai urutan `Rasa Kopi`, `Aroma`, `Konsistensi Racikan`, `Penyajian`, `Kecepatan Penyajian`, `Stabilitas Suhu Penyajian`, lalu CASE nilai tepat sesuai tabel spesifikasi.
+
+Ganti CASE dengan rumus SQL yang sama dengan spesifikasi, menggunakan indeks `i` dari nomor kode barista:
+
+```sql
+CASE k.kode
+  WHEN 'C1' THEN 60 + 5 * ( i        % 9)
+  WHEN 'C2' THEN 60 + 5 * ((i / 9)  % 9)
+  WHEN 'C3' THEN 60 + 5 * ((i / 81) % 9)
+  WHEN 'C4' THEN 60 + 5 * ((i * 5 + 2) % 9)
+  WHEN 'C5' THEN 60 + 5 * ((i * 7 + 4) % 9)
+  WHEN 'C6' THEN 60 + 5 * ((i * 8 + 6) % 9)
+END
+```
+
+Tambahkan `output/data-barista-dan-penilaian.xlsx` sebagai artefak satu sheet dengan header `Kode Barista`, `Nama Barista`, `Divisi`, `Jabatan`, `Status`, `C1`, `C2`, `C3`, `C4`, `C5`, `C6`. Buat spreadsheet menggunakan generator lokal yang tidak menambah dependency aplikasi, dan gunakan rumus/nilai seed yang sama.
 
 Isi migrasi baru dengan:
 
@@ -193,20 +213,23 @@ ALTER TABLE public.kriteria DROP COLUMN IF EXISTS tipe;
 COMMIT;
 ```
 
-Gunakan nama constraint yang sebenarnya bila berbeda: query `pg_constraint` pada database sebelum menjalankan migrasi. README wajib menyatakan bahwa seed baru berisi 3 barista/6 kriteria dan bahwa migrasi hanya menghapus atribut tipe, bukan data pengguna.
+Gunakan nama constraint yang sebenarnya bila berbeda: query `pg_constraint` pada database sebelum menjalankan migrasi. README wajib menyatakan bahwa seed baru berisi 100 barista/6 kriteria dengan skor 60–100 kelipatan 5 dan bahwa migrasi hanya menghapus atribut tipe, bukan data pengguna.
 
 - [ ] **Step 4: Verifikasi literal SQL dan dokumentasi.**
 
-Run: `rg -n "B004|B005|COST|BENEFIT|tipe|Barista [ABC]|WHEN 'C[1-6]'" database/db_magiq_waroenk_bikers.sql database/migrations/20260808_drop_kriteria_type.sql README.md`
+Run: `rg -n "COST|BENEFIT|tipe|generate_series\(0, 99\)|60 \+ 5" database/db_magiq_waroenk_bikers.sql database/migrations/20260808_drop_kriteria_type.sql README.md`
 
-Expected: hanya referensi `tipe` pada migrasi/penjelasan migrasi; tidak ada B004/B005, COST, atau BENEFIT dalam seed.
+Expected: hanya referensi `tipe` pada migrasi/penjelasan migrasi; tidak ada COST atau BENEFIT dalam seed, dan rumus 100 barista tersedia.
+
+Validasi spreadsheet dengan pembaca XLSX lokal: pastikan hanya ada sheet `Data Barista dan Penilaian`, header memiliki 11 kolom, terdapat tepat 100 baris data, setiap kode B001–B100 unik, dan tiap C1–C6 berada pada 60–100 serta habis dibagi 5.
 
 - [ ] **Step 5: Commit skema dan seed.**
 
 ```bash
 git add database/db_magiq_waroenk_bikers.sql \
   database/migrations/20260808_drop_kriteria_type.sql README.md
-git commit -m "feat: align MAGIQ seed data with research"
+git add -f output/data-barista-dan-penilaian.xlsx
+git commit -m "feat: seed 100 barista assessment data"
 ```
 
 ### Task 4: Tambahkan preview cetak dan hari pada tanda tangan
@@ -303,13 +326,19 @@ Run: `rg -n "BENEFIT|COST|getTipe|setTipe|tipeComboBox|\"Jenis\"" src database/d
 
 Expected: tidak ada hasil.
 
-- [ ] **Step 3: Periksa diff dan status repository.**
+- [ ] **Step 3: Verifikasi data Excel dan data seed.**
+
+Run: pembaca XLSX lokal untuk memeriksa satu sheet, header 11 kolom, 100 baris data, kode B001–B100, dan skor C1–C6 yang seluruhnya 60–100 kelipatan 5; kemudian cocokkan beberapa baris awal/tengah/akhir terhadap hasil rumus seed SQL.
+
+Expected: Excel dan SQL memiliki identitas serta nilai penilaian yang identik.
+
+- [ ] **Step 4: Periksa diff dan status repository.**
 
 Run: `git diff --check && git status --short && git log -5 --oneline`
 
 Expected: tidak ada whitespace error; hanya perubahan yang terkait ruang lingkup ini.
 
-- [ ] **Step 4: Commit dokumentasi akhir bila ada perubahan README/spec tersisa.**
+- [ ] **Step 5: Commit dokumentasi akhir bila ada perubahan README/spec tersisa.**
 
 ```bash
 git add README.md docs/superpowers/specs/2026-08-08-benefit-only-preview-laporan-design.md
