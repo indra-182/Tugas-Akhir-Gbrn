@@ -29,6 +29,10 @@
 - Modify: `src/com/gibran/waroenkbikers/model/Kriteria.java`
 - Modify: `src/com/gibran/waroenkbikers/service/PerhitunganMagiqService.java`
 - Modify: `src/com/gibran/waroenkbikers/ui/PerhitunganMagiqPanel.java`
+- Modify: `src/com/gibran/waroenkbikers/dao/KriteriaDao.java`
+- Modify: `src/com/gibran/waroenkbikers/ui/KriteriaPanel.java`
+- Modify: `src/com/gibran/waroenkbikers/ui/PenilaianPanel.java`
+- Modify: `src/com/gibran/waroenkbikers/ui/LaporanPanel.java`
 
 **Interfaces:**
 - Consumes: `NormalisasiNilaiCalculator.hitungNilai(double nilai, double[] nilaiKolom)`.
@@ -69,7 +73,7 @@ public static double hitungNilai(double nilai, double[] nilaiKolom) {
 }
 ```
 
-Hapus `nilaiMinimum`, parameter/percabangan `cost`, konstanta `BENEFIT` dan `COST`, serta field/getter/setter `tipe`. Pada service, panggil signature baru, buang validasi tipe dan elemen tipe dari `buatDataUrutanKriteria`. Pada tabel bobot panel perhitungan, hapus kolom `Tipe` serta akses `data[5]`.
+Hapus `nilaiMinimum`, parameter/percabangan `cost`, konstanta `BENEFIT` dan `COST`, serta field/getter/setter `tipe`. Pada service, panggil signature baru, buang validasi tipe dan elemen tipe dari `buatDataUrutanKriteria`. Pada tabel bobot panel perhitungan, hapus kolom `Tipe` serta akses `data[5]`. Dalam commit yang sama, hapus seluruh consumer produksi `tipe`: SELECT/INSERT/UPDATE/pemetaan DAO, combo box/kolom Jenis form kriteria, label tipe pada panel penilaian, dan kolom/nilai Jenis di laporan. Source aplikasi lengkap wajib dapat dikompilasi pada akhir Task 1.
 
 - [ ] **Step 4: Jalankan test fokus hingga lulus.**
 
@@ -84,20 +88,22 @@ git add test/com/gibran/waroenkbikers/util/NormalisasiNilaiCalculatorTest.java \
   src/com/gibran/waroenkbikers/util/NormalisasiNilaiCalculator.java \
   src/com/gibran/waroenkbikers/model/Kriteria.java \
   src/com/gibran/waroenkbikers/service/PerhitunganMagiqService.java \
-  src/com/gibran/waroenkbikers/ui/PerhitunganMagiqPanel.java
+  src/com/gibran/waroenkbikers/ui/PerhitunganMagiqPanel.java \
+  src/com/gibran/waroenkbikers/dao/KriteriaDao.java \
+  src/com/gibran/waroenkbikers/ui/KriteriaPanel.java \
+  src/com/gibran/waroenkbikers/ui/PenilaianPanel.java \
+  src/com/gibran/waroenkbikers/ui/LaporanPanel.java
 git commit -m "refactor: make MAGIQ criteria benefit-only"
 ```
 
 ### Task 2: Hapus tipe kriteria dari persistensi dan UI
 
 **Files:**
-- Modify: `src/com/gibran/waroenkbikers/dao/KriteriaDao.java`
-- Modify: `src/com/gibran/waroenkbikers/ui/KriteriaPanel.java`
-- Modify: `src/com/gibran/waroenkbikers/ui/LaporanPanel.java`
+- Modify: `test/com/gibran/waroenkbikers/util/NormalisasiNilaiCalculatorTest.java`
 
 **Interfaces:**
-- Consumes: `Kriteria` hanya dengan `id`, `kode`, `nama`, `bobot`, `urutanPrioritas`, `keterangan`.
-- Produces: query `kriteria` tanpa kolom tipe dan tampilan data kriteria tanpa field/kolom Jenis.
+- Consumes: aplikasi yang sudah bebas dari field/kolom tipe pada Task 1.
+- Produces: assertion regresi yang memastikan form kriteria tidak memunculkan kembali kontrol tipe.
 
 - [ ] **Step 1: Tambahkan assertion source-level yang gagal untuk memastikan nama tipe tidak tersisa di KriteriaPanel.**
 
@@ -123,7 +129,7 @@ Expected: `AssertionError: Criterion type controls must be removed`.
 
 - [ ] **Step 3: Hapus field dan query tipe secara menyeluruh.**
 
-Di `KriteriaDao`, hapus `tipe` dari SELECT, INSERT, UPDATE dan pemetaan `ResultSet`; INSERT menjadi `(kode, nama, bobot, urutan_prioritas, keterangan)` dan UPDATE hanya memperbarui kode, nama, keterangan. Di `KriteriaPanel`, hapus import `JComboBox`, field combo box, baris input `Jenis`, validasi, binding saat tabel dipilih, reset field, setter model, serta kolom `Jenis`/case indeks terakhir. Di laporan, ganti kolom `Kode, Nama Kriteria, Bobot, Jenis` menjadi `Kode, Nama Kriteria, Bobot` dan hapus nilai tipe.
+Pastikan assertion test tetap gagal jika `tipeComboBox` atau kolom `Jenis` muncul kembali, tanpa mengubah source produksi.
 
 - [ ] **Step 4: Jalankan test source-level dan kompilasi seluruh produksi.**
 
@@ -134,11 +140,8 @@ Expected: `BUILD SUCCESSFUL`. Lalu jalankan test Task 2 lagi dan pastikan exit c
 - [ ] **Step 5: Commit perubahan persistensi/UI.**
 
 ```bash
-git add src/com/gibran/waroenkbikers/dao/KriteriaDao.java \
-  src/com/gibran/waroenkbikers/ui/KriteriaPanel.java \
-  src/com/gibran/waroenkbikers/ui/LaporanPanel.java \
-  test/com/gibran/waroenkbikers/util/NormalisasiNilaiCalculatorTest.java
-git commit -m "refactor: remove criterion type fields"
+git add test/com/gibran/waroenkbikers/util/NormalisasiNilaiCalculatorTest.java
+git commit -m "test: guard removed criterion type UI"
 ```
 
 ### Task 3: Selaraskan skema, migrasi, dan data awal
