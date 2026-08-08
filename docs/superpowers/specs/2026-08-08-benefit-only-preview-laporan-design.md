@@ -66,10 +66,11 @@ divisi, jabatan, status, serta C1 hingga C6.
 
 ## Preview dan Cetak
 
-Tombol Cetak menampilkan dialog modal Swing yang merender halaman laporan
-menggunakan `Printable` yang sama dengan proses cetak. Preview menyediakan
-tombol untuk melanjutkan ke dialog printer/Save PDF dan tombol Tutup. Dengan
-demikian tampilan yang diperiksa pengguna adalah tampilan yang dicetak.
+Tombol Cetak menampilkan dialog modal Swing yang merender seluruh halaman
+laporan menggunakan `Printable` dan `PageFormat` yang sama dengan proses cetak.
+Preview menyediakan tombol untuk melanjutkan ke dialog printer/Save PDF dan
+tombol Tutup. Dengan demikian tampilan yang diperiksa pengguna adalah tampilan
+yang dicetak, termasuk halaman terakhir dengan tanda tangan.
 
 Baris lokasi/tanggal pada area tanda tangan menggunakan locale Indonesia dan
 menampilkan hari, misalnya: `Jakarta, Minggu 8 Agustus 2026`. Hari dan tanggal

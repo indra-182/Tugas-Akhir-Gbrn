@@ -278,7 +278,7 @@ public final class TanggalLaporanFormatter {
 }
 ```
 
-Di `LaporanPanel`, saat tombol Cetak ditekan, validasi ranking/data seperti sekarang, buat satu `Date tanggalCetak`, satu `CetakLaporanPrintable(tanggalCetak)`, dan satu `PrinterJob`. Render halaman pertama printable ke `BufferedImage` berukuran A4 skala tampilan dalam `JLabel`/`JScrollPane` pada `JDialog` modal. Sediakan `Cetak / Simpan PDF` yang menutup preview lalu memanggil `printDialog` dan worker print yang sudah ada; sediakan `Tutup` yang hanya menutup dialog. Pastikan `gambarTandaTangan` memakai `TanggalLaporanFormatter.format(tanggalCetak)` dan bukan `new Date()` per render.
+Di `LaporanPanel`, saat tombol Cetak ditekan, validasi ranking/data seperti sekarang, buat satu `Date tanggalCetak`, satu `CetakLaporanPrintable(tanggalCetak)`, satu `PrinterJob`, dan satu `PageFormat`. Pasang printable menggunakan `printerJob.setPrintable(printable, pageFormat)`. Render setiap page index dari printable dengan PageFormat tersebut ke `BufferedImage` skala tampilan sampai `NO_SUCH_PAGE`, lalu tampilkan seluruh gambar dalam panel vertikal pada `JScrollPane` di `JDialog` modal. Tambahkan test/helper murni yang membuktikan indeks halaman bertambah sampai `NO_SUCH_PAGE` agar preview multi-halaman tidak kembali terpotong. Sediakan `Cetak / Simpan PDF` yang menutup preview lalu memanggil `printDialog` dan worker print yang sudah ada; sediakan `Tutup` yang hanya menutup dialog. Pastikan `gambarTandaTangan` memakai `TanggalLaporanFormatter.format(tanggalCetak)` dan bukan `new Date()` per render.
 
 - [ ] **Step 4: Jalankan test formatter dan build.**
 
