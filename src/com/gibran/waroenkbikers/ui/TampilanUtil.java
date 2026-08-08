@@ -18,6 +18,8 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
 public final class TampilanUtil {
+    private static final int MAKSIMUM_BARIS_TERLIHAT = 25;
+
     public static final Color WARNA_GARIS = new Color(55, 65, 81);
     public static final Color WARNA_HEADER = new Color(15, 118, 110);
     public static final Color WARNA_HEADER_TERANG = new Color(229, 231, 235);
@@ -116,6 +118,24 @@ public final class TampilanUtil {
         header.setFont(FONT_TEBAL);
         header.setBackground(new Color(243, 244, 246));
         header.setForeground(new Color(55, 65, 81));
+    }
+
+    public static int jumlahBarisTerlihat(int jumlahBaris) {
+        return Math.max(1, Math.min(MAKSIMUM_BARIS_TERLIHAT, jumlahBaris));
+    }
+
+    public static Object[] tambahkanKolomNomor(Object[] kolom) {
+        Object[] hasil = new Object[kolom.length + 1];
+        hasil[0] = "No";
+        System.arraycopy(kolom, 0, hasil, 1, kolom.length);
+        return hasil;
+    }
+
+    public static Object[] tambahkanNomor(Object[] baris, int nomor) {
+        Object[] hasil = new Object[baris.length + 1];
+        hasil[0] = nomor;
+        System.arraycopy(baris, 0, hasil, 1, baris.length);
+        return hasil;
     }
 
     public static void pasangKolomNomor(JTable tabel) {

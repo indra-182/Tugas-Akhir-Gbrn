@@ -58,9 +58,10 @@ Untuk database Supabase yang sudah digunakan, buat backup lalu jalankan
 Migrasi ini menghapus kolom legacy `date_entry` dan/atau `tanggal_masuk` dari
 tabel `barista` tanpa menghapus data barista lainnya.
 
-Untuk menghapus atribut tipe kriteria dari database yang sudah ada, jalankan
+Untuk menyelaraskan struktur tabel kriteria pada database lama, jalankan
 `database/migrations/20260808_drop_kriteria_type.sql`. Migrasi ini hanya
-menghapus atribut `tipe`; data barista dan penilaian pengguna tidak dihapus.
+membersihkan kolom legacy yang tidak digunakan; data barista dan penilaian
+pengguna tidak dihapus.
 
 ### 2. Buat File Konfigurasi Database
 
@@ -136,7 +137,7 @@ Langkah perhitungan:
 1. Menentukan alternatif barista.
 2. Menentukan kriteria dan urutan prioritas kriteria.
 3. Menghitung bobot kriteria menggunakan ROC.
-4. Melakukan normalisasi nilai pada setiap kriteria dengan nilai dibagi nilai maksimum.
+4. Melakukan normalisasi nilai pada setiap kriteria dengan membagi nilai dengan skala maksimum 100.
 5. Menghitung nilai preferensi setiap barista:
 
 ```text

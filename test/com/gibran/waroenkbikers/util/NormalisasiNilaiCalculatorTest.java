@@ -9,19 +9,19 @@ public final class NormalisasiNilaiCalculatorTest {
     }
 
     public static void main(String[] args) throws Exception {
-        shouldNormalizeAgainstColumnMaximum();
-        shouldNormalizeZeroColumnAsOne();
+        shouldNormalizeAgainstFixedScoreScale();
+        shouldNormalizeZeroScoreAsZero();
         shouldNotExposeCriterionTypeInCriteriaPanel();
     }
 
-    private static void shouldNormalizeAgainstColumnMaximum() {
+    private static void shouldNormalizeAgainstFixedScoreScale() {
         double result = NormalisasiNilaiCalculator.hitungNilai(75.0,
-                new double[]{50.0, 75.0, 100.0});
+                new double[]{50.0, 75.0, 90.0});
         assertClose(0.75, result);
     }
 
-    private static void shouldNormalizeZeroColumnAsOne() {
-        assertClose(1.0, NormalisasiNilaiCalculator.hitungNilai(0.0,
+    private static void shouldNormalizeZeroScoreAsZero() {
+        assertClose(0.0, NormalisasiNilaiCalculator.hitungNilai(0.0,
                 new double[]{0.0, 0.0}));
     }
 
