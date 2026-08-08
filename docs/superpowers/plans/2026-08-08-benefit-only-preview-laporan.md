@@ -24,7 +24,7 @@
 ### Task 1: Jadikan normalisasi selalu benefit
 
 **Files:**
-- Modify: `test/com/gibran/waroenkbikers/util/NormalisasiNilaiCalculatorTest.java`
+- Create: `test/com/gibran/waroenkbikers/util/NormalisasiNilaiCalculatorTest.java`
 - Modify: `src/com/gibran/waroenkbikers/util/NormalisasiNilaiCalculator.java`
 - Modify: `src/com/gibran/waroenkbikers/model/Kriteria.java`
 - Modify: `src/com/gibran/waroenkbikers/service/PerhitunganMagiqService.java`
