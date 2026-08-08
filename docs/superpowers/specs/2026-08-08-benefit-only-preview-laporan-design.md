@@ -60,9 +60,9 @@ berjalan akan menjatuhkan constraint `tipe` bila ada, lalu menghapus kolom
 `tipe` bila ada. Migrasi tidak menghapus barista atau penilaian pengguna yang
 sudah tersimpan.
 
-File Excel `output/data-barista-dan-penilaian.xlsx` menyediakan artefak data
-yang sama: sheet `Data Barista` dengan kode/nama/divisi/jabatan/status dan sheet
-`Penilaian` dengan satu baris per barista serta kolom C1 hingga C6.
+File Excel `output/data-barista-dan-penilaian.xlsx` menyediakan satu sheet
+`Data Barista dan Penilaian`: satu baris per barista dengan kolom kode, nama,
+divisi, jabatan, status, serta C1 hingga C6.
 
 ## Preview dan Cetak
 
@@ -84,6 +84,6 @@ preview atau cetak dapat dilakukan.
 Pengujian unit normalisasi membuktikan bahwa nilai dibagi maksimum kolom dan
 masukan API tidak lagi menerima flag cost. Pengujian data seed memverifikasi 100
 barista, enam penilaian per barista, rentang 60–100, dan kelipatan 5. File Excel
-divalidasi memiliki dua sheet dan memuat 100 baris data pada setiap sheet.
+divalidasi memiliki satu sheet dan memuat tepat 100 baris data.
 Build Ant dijalankan setelah perubahan untuk memeriksa seluruh source Java dan
 test yang tersedia.
