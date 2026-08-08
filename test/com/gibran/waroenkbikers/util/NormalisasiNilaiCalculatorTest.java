@@ -1,12 +1,17 @@
 package com.gibran.waroenkbikers.util;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 public final class NormalisasiNilaiCalculatorTest {
     private NormalisasiNilaiCalculatorTest() {
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         shouldNormalizeAgainstColumnMaximum();
         shouldNormalizeZeroColumnAsOne();
+        shouldNotExposeCriterionTypeInCriteriaPanel();
     }
 
     private static void shouldNormalizeAgainstColumnMaximum() {
@@ -18,6 +23,14 @@ public final class NormalisasiNilaiCalculatorTest {
     private static void shouldNormalizeZeroColumnAsOne() {
         assertClose(1.0, NormalisasiNilaiCalculator.hitungNilai(0.0,
                 new double[]{0.0, 0.0}));
+    }
+
+    private static void shouldNotExposeCriterionTypeInCriteriaPanel() throws Exception {
+        String source = new String(Files.readAllBytes(Paths.get(
+                "src/com/gibran/waroenkbikers/ui/KriteriaPanel.java")), StandardCharsets.UTF_8);
+        if (source.contains("tipeComboBox") || source.contains("\"Jenis\"")) {
+            throw new AssertionError("Criterion type controls must be removed");
+        }
     }
 
     private static void assertClose(double expected, double actual) {
