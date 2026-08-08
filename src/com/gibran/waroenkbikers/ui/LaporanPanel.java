@@ -165,14 +165,13 @@ public class LaporanPanel extends JPanel {
     }
 
     private void muatLaporanKriteria() throws Exception {
-        tableModel.setDataVector(new Object[][]{}, new Object[]{"Kode", "Nama Kriteria", "Bobot", "Jenis"});
+        tableModel.setDataVector(new Object[][]{}, new Object[]{"Kode", "Nama Kriteria", "Bobot"});
         List<Kriteria> daftarKriteria = kriteriaDao.ambilSemua();
         daftarKriteria.forEach((kriteria) -> {
             tableModel.addRow(new Object[]{
                 kriteria.getKode(),
                 kriteria.getNama(),
-                kriteria.getBobot(),
-                kriteria.getTipe()
+                kriteria.getBobot()
             });
         });
     }

@@ -195,7 +195,7 @@ public class PenilaianPanel extends JPanel {
         private List<Double> daftarNilai = new ArrayList<>();
 
         private PenilaianTableModel() {
-            this.kolom = new String[]{"No", "Kode", "Kriteria", "Bobot", "Tipe", "Nilai"};
+            this.kolom = new String[]{"No", "Kode", "Kriteria", "Bobot", "Nilai"};
         }
 
         public void setData(List<Kriteria> daftarKriteria, Map<Integer, Double> nilaiTersimpan) {
@@ -232,7 +232,7 @@ public class PenilaianPanel extends JPanel {
 
         @Override
         public boolean isCellEditable(int baris, int kolomIndex) {
-            return kolomIndex == 5;
+            return kolomIndex == 4;
         }
 
         @Override
@@ -243,15 +243,14 @@ public class PenilaianPanel extends JPanel {
                 case 1: return kriteria.getKode();
                 case 2: return kriteria.getNama();
                 case 3: return kriteria.getBobot();
-                case 4: return kriteria.getTipe();
-                case 5: return NumberUtil.format(daftarNilai.get(baris));
+                case 4: return NumberUtil.format(daftarNilai.get(baris));
                 default: return "";
             }
         }
 
         @Override
         public void setValueAt(Object nilaiBaru, int baris, int kolomIndex) {
-            if (kolomIndex == 5) {
+            if (kolomIndex == 4) {
                 try {
                     double nilai = NumberUtil.parseNonNegativeDouble(String.valueOf(nilaiBaru), "Nilai");
                     if (nilai > 100) {

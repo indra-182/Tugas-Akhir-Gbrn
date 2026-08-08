@@ -158,7 +158,7 @@ public class KriteriaDao {
     }
 
     private List<Kriteria> ambilSemua(Connection koneksi, boolean kunciBaris) throws SQLException {
-        String sql = "SELECT id, kode, nama, bobot, urutan_prioritas, tipe, keterangan "
+        String sql = "SELECT id, kode, nama, bobot, urutan_prioritas, keterangan "
                 + "FROM kriteria ORDER BY urutan_prioritas";
         if (kunciBaris) {
             sql += " FOR UPDATE";
@@ -183,8 +183,8 @@ public class KriteriaDao {
     private int masukkanSementara(Connection koneksi, Kriteria kriteria, int prioritasSementara)
             throws SQLException {
         String sql = "INSERT INTO kriteria "
-                + "(kode, nama, bobot, urutan_prioritas, tipe, keterangan) "
-                + "VALUES (?, ?, ?, ?, ?, ?)";
+                + "(kode, nama, bobot, urutan_prioritas, keterangan) "
+                + "VALUES (?, ?, ?, ?, ?)";
         PreparedStatement perintah = null;
         ResultSet generatedKeys = null;
         try {
@@ -193,8 +193,7 @@ public class KriteriaDao {
             perintah.setString(2, kriteria.getNama());
             perintah.setDouble(3, kriteria.getBobot());
             perintah.setInt(4, prioritasSementara);
-            perintah.setString(5, kriteria.getTipe());
-            perintah.setString(6, kriteria.getKeterangan());
+            perintah.setString(5, kriteria.getKeterangan());
             perintah.executeUpdate();
             generatedKeys = perintah.getGeneratedKeys();
             if (!generatedKeys.next()) {
@@ -208,15 +207,14 @@ public class KriteriaDao {
     }
 
     private void ubahDataKriteria(Connection koneksi, Kriteria kriteria) throws SQLException {
-        String sql = "UPDATE kriteria SET kode = ?, nama = ?, tipe = ?, keterangan = ? WHERE id = ?";
+        String sql = "UPDATE kriteria SET kode = ?, nama = ?, keterangan = ? WHERE id = ?";
         PreparedStatement perintah = null;
         try {
             perintah = koneksi.prepareStatement(sql);
             perintah.setString(1, kriteria.getKode());
             perintah.setString(2, kriteria.getNama());
-            perintah.setString(3, kriteria.getTipe());
-            perintah.setString(4, kriteria.getKeterangan());
-            perintah.setInt(5, kriteria.getId());
+            perintah.setString(3, kriteria.getKeterangan());
+            perintah.setInt(4, kriteria.getId());
             perintah.executeUpdate();
         } finally {
             DatabaseConnection.closeQuietly(perintah);
@@ -343,7 +341,6 @@ public class KriteriaDao {
         kriteria.setNama(hasil.getString("nama"));
         kriteria.setBobot(hasil.getDouble("bobot"));
         kriteria.setUrutanPrioritas(hasil.getInt("urutan_prioritas"));
-        kriteria.setTipe(hasil.getString("tipe"));
         kriteria.setKeterangan(hasil.getString("keterangan"));
         return kriteria;
     }
