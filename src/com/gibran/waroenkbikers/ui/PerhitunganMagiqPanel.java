@@ -200,7 +200,7 @@ public class PerhitunganMagiqPanel extends JPanel {
 
     private DefaultTableModel buatModelBobotKriteria(PerhitunganDetail detail) {
         DefaultTableModel model = buatModelTidakBisaEdit(new Object[]{
-            "Urutan", "Kode", "Kriteria", "Bobot Awal", "Bobot ROC", "Tipe"
+            "Urutan", "Kode", "Kriteria", "Bobot Awal", "Bobot ROC"
         });
         detail.getDaftarUrutanKriteria().forEach((Object[] data) -> {
             model.addRow(new Object[]{
@@ -208,8 +208,7 @@ public class PerhitunganMagiqPanel extends JPanel {
                 data[1],
                 data[2],
                 NumberUtil.format(((Double) data[3])),
-                NumberUtil.format(((Double) data[4])),
-                data[5]
+                NumberUtil.format(((Double) data[4]))
             });
         });
         return model;

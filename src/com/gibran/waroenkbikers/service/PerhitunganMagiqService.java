@@ -151,8 +151,7 @@ public class PerhitunganMagiqService {
                 kriteria.getKode(),
                 kriteria.getNama(),
                 kriteria.getBobot(),
-                bobotKriteria[daftarUrutan.get(i).indeks],
-                kriteria.getTipe()
+                bobotKriteria[daftarUrutan.get(i).indeks]
             });
         }
         return dataUrutan;
@@ -167,10 +166,9 @@ public class PerhitunganMagiqService {
                 nilaiKolom[i] = matriksKeputusan[i][j];
             }
 
-            boolean cost = Kriteria.COST.equals(daftarKriteria.get(j).getTipe());
             for (int i = 0; i < daftarBarista.size(); i++) {
                 matriksNormalisasi[i][j] = NormalisasiNilaiCalculator.hitungNilai(
-                        matriksKeputusan[i][j], nilaiKolom, cost);
+                        matriksKeputusan[i][j], nilaiKolom);
             }
         }
         return matriksNormalisasi;
@@ -202,13 +200,10 @@ public class PerhitunganMagiqService {
         }
         validasiPrioritas(daftarKriteria);
 
-        daftarKriteria.stream().map((kriteria) -> {
+        daftarKriteria.forEach((kriteria) -> {
             if (kriteria.getBobot() <= 0) {
                 throw new IllegalArgumentException("Bobot kriteria " + kriteria.getKode() + " harus lebih dari 0.");
             }
-            return kriteria;
-        }).filter((kriteria) -> (!Kriteria.BENEFIT.equals(kriteria.getTipe()) && !Kriteria.COST.equals(kriteria.getTipe()))).forEachOrdered((kriteria) -> {
-            throw new IllegalArgumentException("Tipe kriteria " + kriteria.getKode() + " harus BENEFIT atau COST.");
         });
 
         daftarBarista.stream().map((Barista barista) -> {

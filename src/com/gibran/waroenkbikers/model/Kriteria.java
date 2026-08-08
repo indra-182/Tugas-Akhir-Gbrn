@@ -1,15 +1,11 @@
 package com.gibran.waroenkbikers.model;
 
 public class Kriteria {
-    public static final String BENEFIT = "BENEFIT";
-    public static final String COST = "COST";
-
     private int id;
     private String kode;
     private String nama;
     private double bobot;
     private int urutanPrioritas;
-    private String tipe;
     private String keterangan;
 
     public int getId() {
@@ -50,14 +46,6 @@ public class Kriteria {
 
     public void setUrutanPrioritas(int urutanPrioritas) {
         this.urutanPrioritas = urutanPrioritas;
-    }
-
-    public String getTipe() {
-        return tipe;
-    }
-
-    public void setTipe(String tipe) {
-        this.tipe = tipe;
     }
 
     public String getKeterangan() {
