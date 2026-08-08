@@ -9,9 +9,11 @@ import com.gibran.waroenkbikers.model.HasilRanking;
 import com.gibran.waroenkbikers.model.Kriteria;
 import com.gibran.waroenkbikers.util.DialogUtil;
 import com.gibran.waroenkbikers.util.NumberUtil;
+import com.gibran.waroenkbikers.util.TanggalLaporanFormatter;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Desktop;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
@@ -20,7 +22,9 @@ import java.awt.HeadlessException;
 import java.awt.Image;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.image.BufferedImage;
 import java.awt.print.PageFormat;
+import java.awt.print.Paper;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
@@ -28,18 +32,18 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
 import java.util.List;
 import javax.imageio.ImageIO;
 import javax.print.attribute.HashPrintRequestAttributeSet;
 import javax.print.attribute.PrintRequestAttributeSet;
 import javax.print.attribute.standard.Destination;
 import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -230,9 +234,92 @@ public class LaporanPanel extends JPanel {
         }
 
         String namaLaporan = jenis;
+        Date tanggalCetak = new Date();
+        CetakLaporanPrintable printable = buatPrintableLaporan(namaLaporan, tanggalCetak);
         PrinterJob printerJob = PrinterJob.getPrinterJob();
         printerJob.setJobName(namaLaporan);
-        printerJob.setPrintable(new CetakLaporanPrintable());
+        printerJob.setPrintable(printable);
+
+        tampilkanPreviewCetak(namaLaporan, printable, printerJob);
+    }
+
+    private CetakLaporanPrintable buatPrintableLaporan(String namaLaporan, Date tanggalCetak) {
+        int jumlahKolom = tableModel.getColumnCount();
+        int jumlahBaris = tableModel.getRowCount();
+        String[] namaKolom = new String[jumlahKolom];
+        Object[][] data = new Object[jumlahBaris][jumlahKolom];
+
+        for (int kolom = 0; kolom < jumlahKolom; kolom++) {
+            namaKolom[kolom] = tableModel.getColumnName(kolom);
+        }
+        for (int baris = 0; baris < jumlahBaris; baris++) {
+            for (int kolom = 0; kolom < jumlahKolom; kolom++) {
+                data[baris][kolom] = tableModel.getValueAt(baris, kolom);
+            }
+        }
+        return new CetakLaporanPrintable(namaLaporan, tanggalCetak, namaKolom, data);
+    }
+
+    private void tampilkanPreviewCetak(String namaLaporan, CetakLaporanPrintable printable,
+            PrinterJob printerJob) {
+        final BufferedImage gambarPreview;
+        try {
+            gambarPreview = buatGambarPreview(printable);
+        } catch (PrinterException ex) {
+            DialogUtil.showError(this, ex.getMessage());
+            return;
+        }
+
+        JDialog dialogPreview = new JDialog();
+        dialogPreview.setTitle("Preview " + namaLaporan);
+        dialogPreview.setModal(true);
+        dialogPreview.setLayout(new BorderLayout(10, 10));
+
+        JLabel labelPreview = new JLabel(new ImageIcon(gambarPreview));
+        labelPreview.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
+        JScrollPane panelGulir = new JScrollPane(labelPreview);
+        panelGulir.setPreferredSize(new Dimension(680, 740));
+        dialogPreview.add(panelGulir, BorderLayout.CENTER);
+
+        JPanel panelTombol = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton cetakButton = new JButton("Cetak / Simpan PDF");
+        JButton tutupButton = new JButton("Tutup");
+        cetakButton.addActionListener(e -> {
+            dialogPreview.dispose();
+            cetakKePrinter(namaLaporan, printerJob);
+        });
+        tutupButton.addActionListener(e -> dialogPreview.dispose());
+        panelTombol.add(tutupButton);
+        panelTombol.add(cetakButton);
+        dialogPreview.add(panelTombol, BorderLayout.SOUTH);
+
+        dialogPreview.pack();
+        dialogPreview.setLocationRelativeTo(this);
+        dialogPreview.setVisible(true);
+    }
+
+    private BufferedImage buatGambarPreview(CetakLaporanPrintable printable) throws PrinterException {
+        int lebarA4 = 595;
+        int tinggiA4 = 842;
+        BufferedImage gambar = new BufferedImage(lebarA4, tinggiA4, BufferedImage.TYPE_INT_RGB);
+        Graphics2D grafik = gambar.createGraphics();
+        try {
+            grafik.setColor(Color.WHITE);
+            grafik.fillRect(0, 0, lebarA4, tinggiA4);
+
+            PageFormat formatHalaman = new PageFormat();
+            Paper kertas = new Paper();
+            kertas.setSize(lebarA4, tinggiA4);
+            kertas.setImageableArea(0, 0, lebarA4, tinggiA4);
+            formatHalaman.setPaper(kertas);
+            printable.print(grafik, formatHalaman, 0);
+        } finally {
+            grafik.dispose();
+        }
+        return gambar;
+    }
+
+    private void cetakKePrinter(String namaLaporan, PrinterJob printerJob) {
 
         File folderUnduhan = new File(System.getProperty("user.home"), "Downloads");
         File fileHasil = new File(folderUnduhan, namaLaporan + ".pdf");
@@ -294,6 +381,18 @@ public class LaporanPanel extends JPanel {
         private final Font fontNormal = new Font("Serif", Font.PLAIN, 10);
         private final Font fontTabel = new Font("SansSerif", Font.PLAIN, 8);
         private final Font fontTabelHeader = new Font("SansSerif", Font.BOLD, 8);
+        private final String namaLaporan;
+        private final Date tanggalCetak;
+        private final String[] namaKolom;
+        private final Object[][] data;
+
+        private CetakLaporanPrintable(String namaLaporan, Date tanggalCetak,
+                String[] namaKolom, Object[][] data) {
+            this.namaLaporan = namaLaporan;
+            this.tanggalCetak = new Date(tanggalCetak.getTime());
+            this.namaKolom = namaKolom;
+            this.data = data;
+        }
 
         @Override
         public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws PrinterException {
@@ -307,14 +406,14 @@ public class LaporanPanel extends JPanel {
             int jumlahBarisPerHalaman = Math.max(1, (tinggiAreaTabel - TINGGI_HEADER_TABEL) / TINGGI_BARIS);
             int barisMulai = pageIndex * jumlahBarisPerHalaman;
 
-            if (barisMulai >= tableModel.getRowCount()) {
+            if (barisMulai >= data.length) {
                 return NO_SUCH_PAGE;
             }
 
-            int barisAkhir = Math.min(tableModel.getRowCount(), barisMulai + jumlahBarisPerHalaman);
+            int barisAkhir = Math.min(data.length, barisMulai + jumlahBarisPerHalaman);
             gambarTabel(grafik, xAwal, yTabel, lebarKonten, barisMulai, barisAkhir);
 
-            if (barisAkhir >= tableModel.getRowCount()) {
+            if (barisAkhir >= data.length) {
                 gambarTandaTangan(grafik, xAwal, yAwal + tinggiKonten - 130, lebarKonten);
             }
             return PAGE_EXISTS;
@@ -350,12 +449,12 @@ public class LaporanPanel extends JPanel {
             y += 13;
             gambarTeksTengah(grafik, TELEPON, tengah, y, fontNormal);
             y += 34;
-            gambarTeksTengah(grafik, jenisLaporanComboBox.getSelectedItem().toString().toUpperCase(), tengah, y, fontSubJudul);
+            gambarTeksTengah(grafik, namaLaporan.toUpperCase(), tengah, y, fontSubJudul);
             return y + 20;
         }
 
         private void gambarTabel(Graphics2D grafik, int xAwal, int yAwal, int lebarKonten, int barisMulai, int barisAkhir) {
-            int jumlahKolom = tableModel.getColumnCount();
+            int jumlahKolom = namaKolom.length;
             int lebarKolom = Math.max(35, lebarKonten / jumlahKolom);
             int y = yAwal;
 
@@ -367,7 +466,7 @@ public class LaporanPanel extends JPanel {
             for (int kolom = 0; kolom < jumlahKolom; kolom++) {
                 int x = xAwal + (kolom * lebarKolom);
                 grafik.drawRect(x, y, lebarKolom, TINGGI_HEADER_TABEL);
-                gambarTeksPotong(grafik, tableModel.getColumnName(kolom), x + 3, y + 14, lebarKolom - 6);
+                gambarTeksPotong(grafik, namaKolom[kolom], x + 3, y + 14, lebarKolom - 6);
             }
 
             grafik.setFont(fontTabel);
@@ -376,7 +475,7 @@ public class LaporanPanel extends JPanel {
                 for (int kolom = 0; kolom < jumlahKolom; kolom++) {
                     int x = xAwal + (kolom * lebarKolom);
                     grafik.drawRect(x, y, lebarKolom, TINGGI_BARIS);
-                    Object nilai = tableModel.getValueAt(baris, kolom);
+                    Object nilai = data[baris][kolom];
                     gambarTeksPotong(grafik, String.valueOf(nilai), x + 3, y + 13, lebarKolom - 6);
                 }
                 y += TINGGI_BARIS;
@@ -386,11 +485,10 @@ public class LaporanPanel extends JPanel {
         private void gambarTandaTangan(Graphics2D grafik, int xAwal, int yAwal, int lebarKonten) {
             int lebarAreaTandaTangan = 190;
             int xTandaTangan = xAwal + lebarKonten - lebarAreaTandaTangan - 12;
-            String tanggal = new SimpleDateFormat("d MMMM yyyy", new Locale("id", "ID")).format(new Date());
-
             grafik.setFont(fontNormal);
             grafik.setColor(Color.BLACK);
-            gambarTeksTengah(grafik, "Jakarta, " + tanggal, xTandaTangan + (lebarAreaTandaTangan / 2), yAwal, fontNormal);
+            gambarTeksTengah(grafik, TanggalLaporanFormatter.format(tanggalCetak),
+                    xTandaTangan + (lebarAreaTandaTangan / 2), yAwal, fontNormal);
             gambarTeksTengah(grafik, "Mengetahui,", xTandaTangan + (lebarAreaTandaTangan / 2), yAwal + 32, fontNormal);
             gambarTeksTengah(grafik, NAMA_PENANDATANGAN, xTandaTangan + (lebarAreaTandaTangan / 2), yAwal + 116, fontNormal);
         }
