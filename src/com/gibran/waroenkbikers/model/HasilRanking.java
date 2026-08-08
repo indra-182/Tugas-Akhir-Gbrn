@@ -4,7 +4,6 @@ public class HasilRanking {
     private int idBarista;
     private String kodeBarista;
     private String namaBarista;
-    private String divisi;
     private double nilaiMagiq;
     private int peringkat;
 
@@ -30,14 +29,6 @@ public class HasilRanking {
 
     public void setNamaBarista(String namaBarista) {
         this.namaBarista = namaBarista;
-    }
-
-    public String getDivisi() {
-        return divisi;
-    }
-
-    public void setDivisi(String divisi) {
-        this.divisi = divisi;
     }
 
     public double getNilaiMagiq() {

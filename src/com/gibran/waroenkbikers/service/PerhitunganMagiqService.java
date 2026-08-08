@@ -40,7 +40,7 @@ public class PerhitunganMagiqService {
     }
 
     public PerhitunganDetail hitungDetail() throws SQLException {
-        List<Barista> daftarBarista = baristaDao.ambilAktif();
+        List<Barista> daftarBarista = baristaDao.ambilSemua();
         List<Kriteria> daftarKriteria = kriteriaDao.ambilSemua();
         Map<Integer, Map<Integer, Double>> matriksPenilaian = penilaianDao.ambilSemuaSebagaiMatriks();
 
@@ -71,7 +71,7 @@ public class PerhitunganMagiqService {
     }
 
     public List<Object[]> ambilLaporanNormalisasi() throws SQLException {
-        List<Barista> daftarBarista = baristaDao.ambilAktif();
+        List<Barista> daftarBarista = baristaDao.ambilSemua();
         List<Kriteria> daftarKriteria = kriteriaDao.ambilSemua();
         Map<Integer, Map<Integer, Double>> matriksPenilaian = penilaianDao.ambilSemuaSebagaiMatriks();
 

@@ -11,16 +11,11 @@ import java.util.List;
 
 public class BaristaDao {
     private static final String KOLOM_BARISTA =
-            "id, kode_barista, nama, divisi, jabatan, status";
+            "id, kode_barista, nama";
 
     public List<Barista> ambilSemua() throws SQLException {
         String sql = "SELECT " + KOLOM_BARISTA + " FROM barista ORDER BY kode_barista";
-        return ambilDaftarBarista(sql, null);
-    }
-
-    public List<Barista> ambilAktif() throws SQLException {
-        String sql = "SELECT " + KOLOM_BARISTA + " FROM barista WHERE status = ? ORDER BY kode_barista";
-        return ambilDaftarBarista(sql, "AKTIF");
+        return ambilDaftarBarista(sql);
     }
 
     public int hitungSemua() throws SQLException {
@@ -29,14 +24,12 @@ public class BaristaDao {
     }
 
     public void tambah(Barista barista) throws SQLException {
-        String sql = "INSERT INTO barista (kode_barista, nama, divisi, jabatan, status) "
-                + "VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO barista (kode_barista, nama) VALUES (?, ?)";
         simpan(sql, barista, false);
     }
 
     public void ubah(Barista barista) throws SQLException {
-        String sql = "UPDATE barista SET kode_barista = ?, nama = ?, divisi = ?, jabatan = ?, "
-                + "status = ? WHERE id = ?";
+        String sql = "UPDATE barista SET kode_barista = ?, nama = ? WHERE id = ?";
         simpan(sql, barista, true);
     }
 
@@ -55,7 +48,7 @@ public class BaristaDao {
         }
     }
 
-    private List<Barista> ambilDaftarBarista(String sql, String status) throws SQLException {
+    private List<Barista> ambilDaftarBarista(String sql) throws SQLException {
         List<Barista> daftarBarista = new ArrayList<Barista>();
         Connection koneksi = null;
         PreparedStatement perintah = null;
@@ -64,9 +57,6 @@ public class BaristaDao {
         try {
             koneksi = DatabaseConnection.getConnection();
             perintah = koneksi.prepareStatement(sql);
-            if (status != null) {
-                perintah.setString(1, status);
-            }
             hasil = perintah.executeQuery();
             while (hasil.next()) {
                 daftarBarista.add(petakanBarista(hasil));
@@ -103,11 +93,8 @@ public class BaristaDao {
             perintah = koneksi.prepareStatement(sql);
             perintah.setString(1, barista.getKodeBarista());
             perintah.setString(2, barista.getNama());
-            perintah.setString(3, barista.getDivisi());
-            perintah.setString(4, barista.getJabatan());
-            perintah.setString(5, barista.getStatus());
             if (ubah) {
-                perintah.setInt(6, barista.getId());
+                perintah.setInt(3, barista.getId());
             }
             perintah.executeUpdate();
         } finally {
@@ -121,9 +108,6 @@ public class BaristaDao {
         barista.setId(hasil.getInt("id"));
         barista.setKodeBarista(hasil.getString("kode_barista"));
         barista.setNama(hasil.getString("nama"));
-        barista.setDivisi(hasil.getString("divisi"));
-        barista.setJabatan(hasil.getString("jabatan"));
-        barista.setStatus(hasil.getString("status"));
         return barista;
     }
 }

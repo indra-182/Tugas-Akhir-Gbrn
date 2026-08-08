@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -35,10 +34,8 @@ public class BaristaPanel extends JPanel {
 
     private final JTextField kodeField = new JTextField(18);
     private final JTextField namaField = new JTextField(18);
-    private final JTextField jabatanField = new JTextField(18);
     private final JTextField pencarianField = new TeksPlaceholderField(
             "Cari berdasarkan kode barista", 18);
-    private final JComboBox<String> statusComboBox = new JComboBox<>(new String[]{"AKTIF", "NONAKTIF"});
     private final TableRowSorter<BaristaTableModel> penyaringTabel = new TableRowSorter<>(tableModel);
 
     private int idTerpilih = 0;
@@ -81,9 +78,7 @@ public class BaristaPanel extends JPanel {
 
         tambahField(formPanel, batas, 0, "Kode Barista", kodeField);
         tambahField(formPanel, batas, 1, "Nama", namaField);
-        tambahField(formPanel, batas, 2, "Jabatan", jabatanField);
-        tambahField(formPanel, batas, 3, "Status", statusComboBox);
-        tambahField(formPanel, batas, 4, "Search Data", pencarianField);
+        tambahField(formPanel, batas, 2, "Search Data", pencarianField);
 
         JPanel tombolPanel = new JPanel(new GridBagLayout());
         tombolPanel.setBackground(Color.WHITE);
@@ -153,8 +148,6 @@ public class BaristaPanel extends JPanel {
                 idTerpilih = barista.getId();
                 kodeField.setText(barista.getKodeBarista());
                 namaField.setText(barista.getNama());
-                jabatanField.setText(barista.getJabatan());
-                statusComboBox.setSelectedItem(barista.getStatus());
             }
         });
     }
@@ -236,18 +229,13 @@ public class BaristaPanel extends JPanel {
     private Barista bacaForm() {
         if (kodeField.getText().trim().isEmpty()
                 || namaField.getText().trim().isEmpty()
-                || jabatanField.getText().trim().isEmpty()
-                || statusComboBox.getSelectedItem() == null
-                || statusComboBox.getSelectedItem().toString().trim().isEmpty()) {
+                ) {
             throw new IllegalArgumentException("Semua field data barista wajib diisi.");
         }
 
         Barista barista = new Barista();
         barista.setKodeBarista(kodeField.getText().trim());
         barista.setNama(namaField.getText().trim());
-        barista.setJabatan(jabatanField.getText().trim());
-        barista.setDivisi("Barista");
-        barista.setStatus(statusComboBox.getSelectedItem().toString());
         return barista;
     }
 
@@ -255,13 +243,11 @@ public class BaristaPanel extends JPanel {
         idTerpilih = 0;
         kodeField.setText("");
         namaField.setText("");
-        jabatanField.setText("");
-        statusComboBox.setSelectedIndex(0);
         tabel.clearSelection();
     }
 
     private static class BaristaTableModel extends AbstractTableModel {
-        private final String[] kolom = {"No", "Kode Barista", "Nama", "Jabatan", "Status"};
+        private final String[] kolom = {"No", "Kode Barista", "Nama"};
         private List<Barista> data = new ArrayList<>();
 
         public void setData(List<Barista> data) {
@@ -295,8 +281,6 @@ public class BaristaPanel extends JPanel {
                 case 0: return baris + 1;
                 case 1: return barista.getKodeBarista();
                 case 2: return barista.getNama();
-                case 3: return barista.getJabatan();
-                case 4: return barista.getStatus();
                 default: return "";
             }
         }

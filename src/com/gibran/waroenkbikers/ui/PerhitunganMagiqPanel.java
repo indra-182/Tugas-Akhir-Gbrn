@@ -79,7 +79,7 @@ public class PerhitunganMagiqPanel extends JPanel {
 
     private void muatDataAwal() {
         try {
-            List<Barista> daftarBarista = baristaDao.ambilAktif();
+            List<Barista> daftarBarista = baristaDao.ambilSemua();
             List<Kriteria> daftarKriteria = kriteriaDao.ambilSemua();
             Map<Integer, Map<Integer, Double>> matriksPenilaian = penilaianDao.ambilSemuaSebagaiMatriks();
 
@@ -92,12 +92,11 @@ public class PerhitunganMagiqPanel extends JPanel {
     }
 
     private Object[] buatKolomDataAwal(List<Kriteria> daftarKriteria) {
-        Object[] kolom = new Object[daftarKriteria.size() + 3];
+        Object[] kolom = new Object[daftarKriteria.size() + 2];
         kolom[0] = "Kode Barista";
         kolom[1] = "Nama Barista";
-        kolom[2] = "Jabatan";
         for (int i = 0; i < daftarKriteria.size(); i++) {
-            kolom[i + 3] = daftarKriteria.get(i).getKode();
+            kolom[i + 2] = daftarKriteria.get(i).getKode();
         }
         return kolom;
     }
@@ -164,15 +163,14 @@ public class PerhitunganMagiqPanel extends JPanel {
             Map<Integer, Map<Integer, Double>> matriksPenilaian) {
         DefaultTableModel model = buatModelTidakBisaEdit(buatKolomDataAwal(daftarKriteria));
         daftarBarista.stream().map((Barista barista) -> {
-            Object[] baris = new Object[daftarKriteria.size() + 3];
+            Object[] baris = new Object[daftarKriteria.size() + 2];
             baris[0] = barista.getKodeBarista();
             baris[1] = barista.getNama();
-            baris[2] = barista.getJabatan();
             Map<Integer, Double> nilaiBarista = matriksPenilaian.get(barista.getId());
             for (int i = 0; i < daftarKriteria.size(); i++) {
                 Kriteria kriteria = daftarKriteria.get(i);
                 Double nilai = nilaiBarista == null ? null : nilaiBarista.get(kriteria.getId());
-                baris[i + 3] = nilai == null ? "-" : NumberUtil.format(nilai);
+                baris[i + 2] = nilai == null ? "-" : NumberUtil.format(nilai);
             }
             return baris;
         }).forEachOrdered((baris) -> {
@@ -186,12 +184,11 @@ public class PerhitunganMagiqPanel extends JPanel {
         double[][] matriksKeputusan = detail.getMatriksKeputusan();
         for (int i = 0; i < detail.getDaftarBarista().size(); i++) {
             Barista barista = detail.getDaftarBarista().get(i);
-            Object[] baris = new Object[detail.getDaftarKriteria().size() + 3];
+            Object[] baris = new Object[detail.getDaftarKriteria().size() + 2];
             baris[0] = barista.getKodeBarista();
             baris[1] = barista.getNama();
-            baris[2] = barista.getJabatan();
             for (int j = 0; j < detail.getDaftarKriteria().size(); j++) {
-                baris[j + 3] = NumberUtil.format(matriksKeputusan[i][j]);
+                baris[j + 2] = NumberUtil.format(matriksKeputusan[i][j]);
             }
             model.addRow(baris);
         }
@@ -219,12 +216,11 @@ public class PerhitunganMagiqPanel extends JPanel {
         double[][] matriksNormalisasi = detail.getMatriksNormalisasi();
         for (int i = 0; i < detail.getDaftarBarista().size(); i++) {
             Barista barista = detail.getDaftarBarista().get(i);
-            Object[] baris = new Object[detail.getDaftarKriteria().size() + 3];
+            Object[] baris = new Object[detail.getDaftarKriteria().size() + 2];
             baris[0] = barista.getKodeBarista();
             baris[1] = barista.getNama();
-            baris[2] = barista.getJabatan();
             for (int j = 0; j < detail.getDaftarKriteria().size(); j++) {
-                baris[j + 3] = NumberUtil.format(matriksNormalisasi[i][j]);
+                baris[j + 2] = NumberUtil.format(matriksNormalisasi[i][j]);
             }
             model.addRow(baris);
         }

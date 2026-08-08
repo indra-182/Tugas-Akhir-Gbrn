@@ -84,10 +84,10 @@ public class PenilaianDao {
 
     public boolean apakahPenilaianLengkap() throws SQLException {
         String sql = "SELECT "
-                + "(SELECT COUNT(*) FROM barista WHERE status = 'AKTIF') AS jumlah_barista, "
+                + "(SELECT COUNT(*) FROM barista) AS jumlah_barista, "
                 + "(SELECT COUNT(*) FROM kriteria) AS jumlah_kriteria, "
                 + "(SELECT COUNT(*) FROM penilaian p "
-                + "JOIN barista k ON p.id_barista = k.id WHERE k.status = 'AKTIF') AS jumlah_penilaian";
+                + "JOIN barista k ON p.id_barista = k.id) AS jumlah_penilaian";
         Connection koneksi = null;
         PreparedStatement perintah = null;
         ResultSet hasil = null;

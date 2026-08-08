@@ -4,9 +4,6 @@ public class Barista {
     private int id;
     private String kodeBarista;
     private String nama;
-    private String divisi;
-    private String jabatan;
-    private String status;
 
     public int getId() {
         return id;
@@ -30,30 +27,6 @@ public class Barista {
 
     public void setNama(String nama) {
         this.nama = nama;
-    }
-
-    public String getDivisi() {
-        return divisi;
-    }
-
-    public void setDivisi(String divisi) {
-        this.divisi = divisi;
-    }
-
-    public String getJabatan() {
-        return jabatan;
-    }
-
-    public void setJabatan(String jabatan) {
-        this.jabatan = jabatan;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
     }
 
     @Override

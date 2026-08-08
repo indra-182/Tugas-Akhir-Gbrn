@@ -147,7 +147,7 @@ public class PenilaianPanel extends JPanel {
     private void muatBarista() {
         try {
             baristaComboBox.removeAllItems();
-            List<Barista> daftarBarista = baristaDao.ambilAktif();
+            List<Barista> daftarBarista = baristaDao.ambilSemua();
             daftarBarista.forEach((barista) -> {
                 baristaComboBox.addItem(barista);
             });

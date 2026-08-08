@@ -157,14 +157,12 @@ public class LaporanPanel extends JPanel {
     }
 
     private void muatLaporanBarista() throws Exception {
-        tableModel.setDataVector(new Object[][]{}, new Object[]{"Kode Barista", "Nama", "Jabatan", "Status"});
+        tableModel.setDataVector(new Object[][]{}, new Object[]{"Kode Barista", "Nama"});
         List<Barista> daftarBarista = baristaDao.ambilSemua();
         daftarBarista.forEach((barista) -> {
             tableModel.addRow(new Object[]{
                 barista.getKodeBarista(),
-                barista.getNama(),
-                barista.getJabatan(),
-                barista.getStatus()
+                barista.getNama()
             });
         });
     }
