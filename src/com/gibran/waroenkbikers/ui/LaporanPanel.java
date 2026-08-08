@@ -7,6 +7,7 @@ import com.gibran.waroenkbikers.dao.PenilaianDao;
 import com.gibran.waroenkbikers.model.Barista;
 import com.gibran.waroenkbikers.model.HasilRanking;
 import com.gibran.waroenkbikers.model.Kriteria;
+import com.gibran.waroenkbikers.util.CetakPreviewRenderer;
 import com.gibran.waroenkbikers.util.DialogUtil;
 import com.gibran.waroenkbikers.util.NumberUtil;
 import com.gibran.waroenkbikers.util.TanggalLaporanFormatter;
@@ -24,7 +25,6 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.image.BufferedImage;
 import java.awt.print.PageFormat;
-import java.awt.print.Paper;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
@@ -39,6 +39,7 @@ import javax.print.attribute.HashPrintRequestAttributeSet;
 import javax.print.attribute.PrintRequestAttributeSet;
 import javax.print.attribute.standard.Destination;
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -237,10 +238,11 @@ public class LaporanPanel extends JPanel {
         Date tanggalCetak = new Date();
         CetakLaporanPrintable printable = buatPrintableLaporan(namaLaporan, tanggalCetak);
         PrinterJob printerJob = PrinterJob.getPrinterJob();
+        PageFormat formatHalaman = printerJob.defaultPage();
         printerJob.setJobName(namaLaporan);
-        printerJob.setPrintable(printable);
+        printerJob.setPrintable(printable, formatHalaman);
 
-        tampilkanPreviewCetak(namaLaporan, printable, printerJob);
+        tampilkanPreviewCetak(namaLaporan, printable, formatHalaman, printerJob);
     }
 
     private CetakLaporanPrintable buatPrintableLaporan(String namaLaporan, Date tanggalCetak) {
@@ -261,10 +263,10 @@ public class LaporanPanel extends JPanel {
     }
 
     private void tampilkanPreviewCetak(String namaLaporan, CetakLaporanPrintable printable,
-            PrinterJob printerJob) {
-        final BufferedImage gambarPreview;
+            PageFormat formatHalaman, PrinterJob printerJob) {
+        final List<BufferedImage> gambarPreview;
         try {
-            gambarPreview = buatGambarPreview(printable);
+            gambarPreview = CetakPreviewRenderer.renderAll(printable, formatHalaman);
         } catch (PrinterException ex) {
             DialogUtil.showError(this, ex.getMessage());
             return;
@@ -275,9 +277,15 @@ public class LaporanPanel extends JPanel {
         dialogPreview.setModal(true);
         dialogPreview.setLayout(new BorderLayout(10, 10));
 
-        JLabel labelPreview = new JLabel(new ImageIcon(gambarPreview));
-        labelPreview.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
-        JScrollPane panelGulir = new JScrollPane(labelPreview);
+        JPanel panelHalaman = new JPanel();
+        panelHalaman.setLayout(new BoxLayout(panelHalaman, BoxLayout.Y_AXIS));
+        panelHalaman.setBackground(Color.WHITE);
+        for (BufferedImage gambar : gambarPreview) {
+            JLabel labelPreview = new JLabel(new ImageIcon(gambar));
+            labelPreview.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
+            panelHalaman.add(labelPreview);
+        }
+        JScrollPane panelGulir = new JScrollPane(panelHalaman);
         panelGulir.setPreferredSize(new Dimension(680, 740));
         dialogPreview.add(panelGulir, BorderLayout.CENTER);
 
@@ -296,27 +304,6 @@ public class LaporanPanel extends JPanel {
         dialogPreview.pack();
         dialogPreview.setLocationRelativeTo(this);
         dialogPreview.setVisible(true);
-    }
-
-    private BufferedImage buatGambarPreview(CetakLaporanPrintable printable) throws PrinterException {
-        int lebarA4 = 595;
-        int tinggiA4 = 842;
-        BufferedImage gambar = new BufferedImage(lebarA4, tinggiA4, BufferedImage.TYPE_INT_RGB);
-        Graphics2D grafik = gambar.createGraphics();
-        try {
-            grafik.setColor(Color.WHITE);
-            grafik.fillRect(0, 0, lebarA4, tinggiA4);
-
-            PageFormat formatHalaman = new PageFormat();
-            Paper kertas = new Paper();
-            kertas.setSize(lebarA4, tinggiA4);
-            kertas.setImageableArea(0, 0, lebarA4, tinggiA4);
-            formatHalaman.setPaper(kertas);
-            printable.print(grafik, formatHalaman, 0);
-        } finally {
-            grafik.dispose();
-        }
-        return gambar;
     }
 
     private void cetakKePrinter(String namaLaporan, PrinterJob printerJob) {
