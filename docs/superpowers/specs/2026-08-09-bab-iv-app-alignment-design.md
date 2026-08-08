@@ -29,6 +29,10 @@ Narasi dan tabel akan menjelaskan enam kriteria, bobot ROC otomatis, normalisasi
 - Mengganti asumsi lima barista menjadi 100 barista untuk dataset aplikasi.
 - Menghapus referensi jabatan, divisi, dan status dari narasi, tabel, laporan, mockup, dan screenshot.
 - Menyesuaikan deskripsi preview laporan dengan alur aplikasi existing.
+- Menjaga kesinambungan dengan BAB II dan BAB III: istilah SPK/MCDM, MAGIQ, ROC, enam kriteria, urutan prioritas, rumus, dan penjelasan normalisasi harus memakai konsep yang sama.
+- Menggunakan contoh Barista A, Barista B, dan Barista C serta nilai pada BAB III sebagai blok perhitungan data primer di BAB IV.
+- Menjaga urutan kriteria di BAB IV tetap sama dengan BAB II/BAB III dan seed aplikasi: Rasa Kopi, Aroma, Konsistensi Racikan, Penyajian, Kecepatan Penyajian, dan Stabilitas Suhu Penyajian.
+- Memisahkan dengan jelas contoh akademik 3 data primer dari dataset implementasi 100 data dummy, tanpa membuat keduanya terlihat sebagai dataset yang sama.
 
 ### 4. Gambar BAB IV
 
@@ -50,6 +54,6 @@ Narasi dan tabel akan menjelaskan enam kriteria, bobot ROC otomatis, normalisasi
 - `rg` tidak menemukan consumer produksi untuk `getJabatan`, `setJabatan`, `getDivisi`, `setDivisi`, `getStatus`, `setStatus`, atau kolom SQL terkait pada source/seed/migration yang menjadi bagian aplikasi.
 - Project Java berhasil dikompilasi.
 - Hasil perhitungan 3 data dan 100 data dapat direkonsiliasi dengan rumus serta output aplikasi.
+- Isi BAB IV dapat ditelusuri kembali ke konsep, istilah, urutan kriteria, rumus, dan contoh data pada BAB II/BAB III.
 - DOCX hasil akhir memiliki tabel dan gambar yang lengkap tanpa teks/label lama.
 - Seluruh halaman hasil render diperiksa secara visual untuk clipping, overlap, tabel terpotong, caption bergeser, dan gambar buram.
-
