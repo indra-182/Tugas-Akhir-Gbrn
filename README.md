@@ -17,7 +17,7 @@ Teknologi yang digunakan:
 
 1. Login admin.
 2. Kelola data barista sebagai alternatif penilaian.
-3. Kelola data kriteria, bobot prioritas, dan tipe kriteria benefit/cost.
+3. Kelola data kriteria dan bobot prioritas.
 4. Input nilai kualitas racikan kopi per barista dan per kriteria.
 5. Perhitungan MAGIQ otomatis.
 6. Ranking barista berdasarkan nilai MAGIQ terbesar.
@@ -49,13 +49,18 @@ database/db_magiq_waroenk_bikers.sql
 ```
 
 Skrip ini membuat ulang tabel pada skema `public`, sehingga jangan dijalankan
-pada database produksi yang sudah berisi data penting. File SQL menyediakan 5
-data barista, 6 kriteria racikan kopi, dan nilai penilaian awal.
+pada database produksi yang sudah berisi data penting. File SQL menyediakan
+100 data barista, 6 kriteria racikan kopi, dan nilai penilaian awal. Skor C1--C6
+berada pada rentang 60--100 dalam kelipatan 5.
 
 Untuk database Supabase yang sudah digunakan, buat backup lalu jalankan
 `database/migrations/20260801_drop_barista_entry_date.sql` di SQL Editor.
 Migrasi ini menghapus kolom legacy `date_entry` dan/atau `tanggal_masuk` dari
 tabel `barista` tanpa menghapus data barista lainnya.
+
+Untuk menghapus atribut tipe kriteria dari database yang sudah ada, jalankan
+`database/migrations/20260808_drop_kriteria_type.sql`. Migrasi ini hanya
+menghapus atribut `tipe`; data barista dan penilaian pengguna tidak dihapus.
 
 ### 2. Buat File Konfigurasi Database
 
@@ -109,14 +114,14 @@ Password: admin123
 
 ## Kriteria Default
 
-| Kode | Kriteria | Keterangan | Tipe |
-| --- | --- | --- | --- |
-| C1 | Rasa Kopi | Tingkat keseimbangan rasa pahit, manis, dan keasaman | Benefit |
-| C2 | Aroma | Keharuman kopi yang dihasilkan | Benefit |
-| C3 | Penyajian | Tampilan dan kerapihan penyajian kopi | Benefit |
-| C4 | Konsistensi Racikan | Konsistensi rasa antara satu penyajian dengan lainnya | Benefit |
-| C5 | Kecepatan Penyajian | Waktu yang dibutuhkan dalam membuat kopi (menit) | Cost |
-| C6 | Stabilitas Suhu Penyajian | Penyimpangan suhu kopi saat disajikan, diukur dengan termometer (derajat Celsius) | Cost |
+| Kode | Kriteria | Keterangan |
+| --- | --- | --- |
+| C1 | Rasa Kopi | Tingkat keseimbangan rasa pahit, manis, dan keasaman |
+| C2 | Aroma | Keharuman kopi yang dihasilkan |
+| C3 | Konsistensi Racikan | Konsistensi rasa antara satu penyajian dengan lainnya |
+| C4 | Penyajian | Tampilan dan kerapihan penyajian kopi |
+| C5 | Kecepatan Penyajian | Kecepatan barista dalam menyajikan kopi |
+| C6 | Stabilitas Suhu Penyajian | Kestabilan suhu kopi saat disajikan |
 
 ## Ringkasan Metode MAGIQ
 
@@ -131,7 +136,7 @@ Langkah perhitungan:
 1. Menentukan alternatif barista.
 2. Menentukan kriteria dan urutan prioritas kriteria.
 3. Menghitung bobot kriteria menggunakan ROC.
-4. Melakukan normalisasi nilai pada setiap kriteria; kriteria benefit menggunakan nilai dibagi nilai maksimum, sedangkan kriteria cost menggunakan nilai minimum dibagi nilai alternatif.
+4. Melakukan normalisasi nilai pada setiap kriteria dengan nilai dibagi nilai maksimum.
 5. Menghitung nilai preferensi setiap barista:
 
 ```text

@@ -32,7 +32,6 @@ CREATE TABLE kriteria (
   nama VARCHAR(100) NOT NULL,
   bobot DECIMAL(10,4) NOT NULL,
   urutan_prioritas INTEGER NOT NULL,
-  tipe VARCHAR(10) NOT NULL DEFAULT 'BENEFIT' CHECK (tipe IN ('BENEFIT', 'COST')),
   keterangan VARCHAR(255),
   dibuat_pada TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   diubah_pada TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -83,40 +82,33 @@ FOR EACH ROW EXECUTE FUNCTION set_diubah_pada();
 INSERT INTO pengguna (username, password_hash, nama_lengkap, role) VALUES
 ('admin', 'e1e0797e52d34c7d8d7a3ab2db952aa2775d7df89eac54a655c294d2b6d56909', 'Administrator', 'ADMIN');
 
-INSERT INTO barista (kode_barista, nama, divisi, jabatan, status) VALUES
-('B001', 'Ahmad Fadli', 'Bar', 'Barista', 'AKTIF'),
-('B002', 'Aldi Pratamas', 'Bar', 'Barista', 'AKTIF'),
-('B003', 'Andi Saputra', 'Quality Control', 'Senior Barista', 'AKTIF'),
-('B004', 'Arif Hidayat', 'Service', 'Barista', 'AKTIF'),
-('B005', 'Bagus Kurniawan', 'Training', 'Asisten Barista', 'AKTIF');
+INSERT INTO barista (kode_barista, nama, divisi, jabatan, status)
+SELECT 'B' || LPAD((i + 1)::TEXT, 3, '0'),
+       'Barista ' || REPEAT(CHR(65 + (i % 26)), (i / 26) + 1),
+       'Bar', 'Barista', 'AKTIF'
+FROM generate_series(0, 99) AS data(i);
 
-INSERT INTO kriteria (kode, nama, bobot, urutan_prioritas, tipe, keterangan) VALUES
-('C1', 'Rasa Kopi', 0.4083, 1, 'BENEFIT', 'Tingkat keseimbangan rasa pahit, manis, dan keasaman.'),
-('C2', 'Aroma', 0.2417, 2, 'BENEFIT', 'Keharuman kopi yang dihasilkan.'),
-('C3', 'Penyajian', 0.1583, 3, 'BENEFIT', 'Tampilan dan kerapihan penyajian kopi.'),
-('C4', 'Konsistensi Racikan', 0.1028, 4, 'BENEFIT', 'Konsistensi rasa antara satu penyajian dengan lainnya.'),
-('C5', 'Kecepatan Penyajian', 0.0611, 5, 'COST', 'Waktu yang dibutuhkan barista dalam menyajikan kopi; semakin singkat semakin baik.'),
-('C6', 'Stabilitas Suhu Penyajian', 0.0278, 6, 'COST', 'Tingkat kestabilan suhu kopi saat disajikan yang diukur menggunakan alat termometer; semakin kecil penyimpangan suhu semakin baik.');
+INSERT INTO kriteria (kode, nama, bobot, urutan_prioritas, keterangan) VALUES
+('C1', 'Rasa Kopi', 0.4083, 1, 'Tingkat keseimbangan rasa pahit, manis, dan keasaman.'),
+('C2', 'Aroma', 0.2417, 2, 'Keharuman kopi yang dihasilkan.'),
+('C3', 'Konsistensi Racikan', 0.1583, 3, 'Konsistensi rasa antara satu penyajian dengan lainnya.'),
+('C4', 'Penyajian', 0.1028, 4, 'Tampilan dan kerapihan penyajian kopi.'),
+('C5', 'Kecepatan Penyajian', 0.0611, 5, 'Kecepatan barista dalam menyajikan kopi.'),
+('C6', 'Stabilitas Suhu Penyajian', 0.0278, 6, 'Kestabilan suhu kopi saat disajikan.');
 
--- Nilai penilaian eksplisit untuk enam kriteria.
+-- Nilai acuan deterministik 60--100 untuk enam kriteria.
 INSERT INTO penilaian (id_barista, id_kriteria, nilai)
 SELECT b.id, k.id,
-  CASE b.kode_barista
-    WHEN 'B001' THEN CASE k.kode
-      WHEN 'C1' THEN 88 WHEN 'C2' THEN 73 WHEN 'C3' THEN 84
-      WHEN 'C4' THEN 95 WHEN 'C5' THEN 10 WHEN 'C6' THEN 3 END
-    WHEN 'B002' THEN CASE k.kode
-      WHEN 'C1' THEN 95 WHEN 'C2' THEN 80 WHEN 'C3' THEN 91
-      WHEN 'C4' THEN 76 WHEN 'C5' THEN 4 WHEN 'C6' THEN 2 END
-    WHEN 'B003' THEN CASE k.kode
-      WHEN 'C1' THEN 76 WHEN 'C2' THEN 87 WHEN 'C3' THEN 72
-      WHEN 'C4' THEN 83 WHEN 'C5' THEN 6 WHEN 'C6' THEN 4 END
-    WHEN 'B004' THEN CASE k.kode
-      WHEN 'C1' THEN 83 WHEN 'C2' THEN 94 WHEN 'C3' THEN 79
-      WHEN 'C4' THEN 90 WHEN 'C5' THEN 8 WHEN 'C6' THEN 3 END
-    WHEN 'B005' THEN CASE k.kode
-      WHEN 'C1' THEN 90 WHEN 'C2' THEN 75 WHEN 'C3' THEN 86
-      WHEN 'C4' THEN 71 WHEN 'C5' THEN 10 WHEN 'C6' THEN 5 END
+  CASE k.kode
+    WHEN 'C1' THEN 60 + 5 * ( i        % 9)
+    WHEN 'C2' THEN 60 + 5 * ((i / 9)  % 9)
+    WHEN 'C3' THEN 60 + 5 * ((i / 81) % 9)
+    WHEN 'C4' THEN 60 + 5 * ((i * 5 + 2) % 9)
+    WHEN 'C5' THEN 60 + 5 * ((i * 7 + 4) % 9)
+    WHEN 'C6' THEN 60 + 5 * ((i * 8 + 6) % 9)
   END AS nilai
 FROM barista b
+CROSS JOIN LATERAL (
+  SELECT SUBSTRING(b.kode_barista FROM 2)::INTEGER - 1 AS i
+) AS data
 CROSS JOIN kriteria k;
