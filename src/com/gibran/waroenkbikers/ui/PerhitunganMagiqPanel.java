@@ -98,7 +98,7 @@ public class PerhitunganMagiqPanel extends JPanel {
         for (int i = 0; i < daftarKriteria.size(); i++) {
             kolom[i + 2] = daftarKriteria.get(i).getKode();
         }
-        return kolom;
+        return TampilanUtil.tambahkanKolomNomor(kolom);
     }
 
     private void prosesPerhitungan() {
@@ -151,7 +151,9 @@ public class PerhitunganMagiqPanel extends JPanel {
         tabelBagian.setAutoCreateRowSorter(true);
         TampilanUtil.rapikanTabel(tabelBagian);
         JScrollPane scrollPane = new JScrollPane(tabelBagian);
-        int tinggi = Math.min(190, 58 + (model.getRowCount() * 24));
+        int jumlahBarisTerlihat = TampilanUtil.jumlahBarisTerlihat(model.getRowCount());
+        int tinggiHeader = tabelBagian.getTableHeader().getPreferredSize().height;
+        int tinggi = tinggiHeader + (jumlahBarisTerlihat * tabelBagian.getRowHeight()) + 4;
         scrollPane.setPreferredSize(new Dimension(900, Math.max(110, tinggi)));
 
         bagianPanel.add(judulLabel, BorderLayout.NORTH);
@@ -162,7 +164,8 @@ public class PerhitunganMagiqPanel extends JPanel {
     private DefaultTableModel buatModelDataAwal(List<Barista> daftarBarista, List<Kriteria> daftarKriteria,
             Map<Integer, Map<Integer, Double>> matriksPenilaian) {
         DefaultTableModel model = buatModelTidakBisaEdit(buatKolomDataAwal(daftarKriteria));
-        daftarBarista.stream().map((Barista barista) -> {
+        for (int nomor = 0; nomor < daftarBarista.size(); nomor++) {
+            Barista barista = daftarBarista.get(nomor);
             Object[] baris = new Object[daftarKriteria.size() + 2];
             baris[0] = barista.getKodeBarista();
             baris[1] = barista.getNama();
@@ -172,10 +175,8 @@ public class PerhitunganMagiqPanel extends JPanel {
                 Double nilai = nilaiBarista == null ? null : nilaiBarista.get(kriteria.getId());
                 baris[i + 2] = nilai == null ? "-" : NumberUtil.format(nilai);
             }
-            return baris;
-        }).forEachOrdered((baris) -> {
-            model.addRow(baris);
-        });
+            model.addRow(TampilanUtil.tambahkanNomor(baris, nomor + 1));
+        }
         return model;
     }
 
@@ -190,24 +191,25 @@ public class PerhitunganMagiqPanel extends JPanel {
             for (int j = 0; j < detail.getDaftarKriteria().size(); j++) {
                 baris[j + 2] = NumberUtil.format(matriksKeputusan[i][j]);
             }
-            model.addRow(baris);
+            model.addRow(TampilanUtil.tambahkanNomor(baris, i + 1));
         }
         return model;
     }
 
     private DefaultTableModel buatModelBobotKriteria(PerhitunganDetail detail) {
-        DefaultTableModel model = buatModelTidakBisaEdit(new Object[]{
+        DefaultTableModel model = buatModelTidakBisaEdit(TampilanUtil.tambahkanKolomNomor(new Object[]{
             "Urutan", "Kode", "Kriteria", "Bobot Awal", "Bobot ROC"
-        });
-        detail.getDaftarUrutanKriteria().forEach((Object[] data) -> {
-            model.addRow(new Object[]{
+        }));
+        for (int i = 0; i < detail.getDaftarUrutanKriteria().size(); i++) {
+            Object[] data = detail.getDaftarUrutanKriteria().get(i);
+            model.addRow(TampilanUtil.tambahkanNomor(new Object[]{
                 data[0],
                 data[1],
                 data[2],
                 NumberUtil.format(((Double) data[3])),
                 NumberUtil.format(((Double) data[4]))
-            });
-        });
+            }, i + 1));
+        }
         return model;
     }
 
@@ -222,23 +224,23 @@ public class PerhitunganMagiqPanel extends JPanel {
             for (int j = 0; j < detail.getDaftarKriteria().size(); j++) {
                 baris[j + 2] = NumberUtil.format(matriksNormalisasi[i][j]);
             }
-            model.addRow(baris);
+            model.addRow(TampilanUtil.tambahkanNomor(baris, i + 1));
         }
         return model;
     }
 
     private DefaultTableModel buatModelNilaiPreferensi(PerhitunganDetail detail) {
-        DefaultTableModel model = buatModelTidakBisaEdit(new Object[]{
+        DefaultTableModel model = buatModelTidakBisaEdit(TampilanUtil.tambahkanKolomNomor(new Object[]{
             "Kode Barista", "Nama Barista", "Nilai Preferensi"
-        });
+        }));
         double[] nilaiPreferensi = detail.getNilaiPreferensi();
         for (int i = 0; i < detail.getDaftarBarista().size(); i++) {
             Barista barista = detail.getDaftarBarista().get(i);
-            model.addRow(new Object[]{
+            model.addRow(TampilanUtil.tambahkanNomor(new Object[]{
                 barista.getKodeBarista(),
                 barista.getNama(),
                 NumberUtil.format(nilaiPreferensi[i])
-            });
+            }, i + 1));
         }
         return model;
     }

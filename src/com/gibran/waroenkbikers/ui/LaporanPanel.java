@@ -357,6 +357,8 @@ public class LaporanPanel extends JPanel {
         private static final int MARGIN_KONTEN = 20;
         private static final int TINGGI_BARIS = 18;
         private static final int TINGGI_HEADER_TABEL = 22;
+        private static final int TINGGI_KOP = 148;
+        private static final int CADANGAN_TINGGI_TANDA_TANGAN = 150;
         private static final int LEBAR_LOGO = 90;
         private static final int TINGGI_LOGO = 75;
 
@@ -386,16 +388,25 @@ public class LaporanPanel extends JPanel {
             int yAwal = (int) pageFormat.getImageableY() + MARGIN_KONTEN;
             int lebarKonten = (int) pageFormat.getImageableWidth() - (MARGIN_KONTEN * 2);
             int tinggiKonten = (int) pageFormat.getImageableHeight() - (MARGIN_KONTEN * 2);
-            int yTabel = gambarKopLaporan(grafik, xAwal, yAwal, lebarKonten);
-            int tinggiAreaTabel = tinggiKonten - (yTabel - yAwal) - 150;
-            int jumlahBarisPerHalaman = Math.max(1, (tinggiAreaTabel - TINGGI_HEADER_TABEL) / TINGGI_BARIS);
-            int barisMulai = pageIndex * jumlahBarisPerHalaman;
+            int tinggiAreaTabelHalamanPertama = tinggiKonten - TINGGI_KOP
+                    - CADANGAN_TINGGI_TANDA_TANGAN;
+            int tinggiAreaTabelHalamanLanjutan = tinggiKonten - CADANGAN_TINGGI_TANDA_TANGAN;
+            int barisHalamanPertama = LaporanPageLayout.hitungJumlahBarisPerHalaman(
+                    tinggiAreaTabelHalamanPertama, TINGGI_HEADER_TABEL, TINGGI_BARIS);
+            int barisHalamanLanjutan = LaporanPageLayout.hitungJumlahBarisPerHalaman(
+                    tinggiAreaTabelHalamanLanjutan, TINGGI_HEADER_TABEL, TINGGI_BARIS);
+            int barisMulai = LaporanPageLayout.hitungBarisMulai(
+                    pageIndex, barisHalamanPertama, barisHalamanLanjutan);
 
             if (barisMulai >= data.length) {
                 return NO_SUCH_PAGE;
             }
 
-            int barisAkhir = Math.min(data.length, barisMulai + jumlahBarisPerHalaman);
+            int yTabel = pageIndex == 0
+                    ? gambarKopLaporan(grafik, xAwal, yAwal, lebarKonten)
+                    : yAwal;
+            int barisPerHalaman = pageIndex == 0 ? barisHalamanPertama : barisHalamanLanjutan;
+            int barisAkhir = Math.min(data.length, barisMulai + barisPerHalaman);
             gambarTabel(grafik, xAwal, yTabel, lebarKonten, barisMulai, barisAkhir);
 
             if (barisAkhir >= data.length) {
@@ -414,7 +425,6 @@ public class LaporanPanel extends JPanel {
 
         private int gambarKopLaporan(Graphics2D grafik, int xAwal, int yAwal, int lebarKonten) {
             grafik.setColor(Color.BLACK);
-            grafik.drawRect(xAwal - 10, yAwal - 10, lebarKonten + 20, 760);
 
             if (logo != null) {
                 grafik.drawImage(logo, xAwal + 18, yAwal + 8, LEBAR_LOGO, TINGGI_LOGO, null);
@@ -433,7 +443,9 @@ public class LaporanPanel extends JPanel {
             gambarTeksTengah(grafik, ALAMAT_BARIS_4, tengah, y, fontNormal);
             y += 13;
             gambarTeksTengah(grafik, TELEPON, tengah, y, fontNormal);
-            y += 34;
+            int yGarisKop = y + 14;
+            grafik.drawLine(xAwal, yGarisKop, xAwal + lebarKonten, yGarisKop);
+            y = yGarisKop + 28;
             gambarTeksTengah(grafik, namaLaporan.toUpperCase(), tengah, y, fontSubJudul);
             return y + 20;
         }
@@ -494,5 +506,23 @@ public class LaporanPanel extends JPanel {
             }
             grafik.drawString(teksTampil, x, y);
         }
+    }
+}
+
+final class LaporanPageLayout {
+    private LaporanPageLayout() {
+    }
+
+    static int hitungJumlahBarisPerHalaman(int tinggiAreaTabel,
+            int tinggiHeaderTabel, int tinggiBaris) {
+        return Math.max(1, (tinggiAreaTabel - tinggiHeaderTabel) / tinggiBaris);
+    }
+
+    static int hitungBarisMulai(int pageIndex, int barisHalamanPertama,
+            int barisHalamanLanjutan) {
+        if (pageIndex <= 0) {
+            return 0;
+        }
+        return barisHalamanPertama + ((pageIndex - 1) * barisHalamanLanjutan);
     }
 }
