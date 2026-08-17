@@ -9,20 +9,32 @@ public final class NormalisasiNilaiCalculatorTest {
     }
 
     public static void main(String[] args) throws Exception {
-        shouldNormalizeAgainstFixedScoreScale();
+        shouldNormalizeAgainstColumnMaximum();
         shouldNormalizeZeroScoreAsZero();
+        shouldKeepDummyC3AtOne();
+        shouldKeepPrimaryC3Separate();
         shouldNotExposeCriterionTypeInCriteriaPanel();
     }
 
-    private static void shouldNormalizeAgainstFixedScoreScale() {
+    private static void shouldNormalizeAgainstColumnMaximum() {
         double result = NormalisasiNilaiCalculator.hitungNilai(75.0,
                 new double[]{50.0, 75.0, 90.0});
-        assertClose(0.75, result);
+        assertClose(75.0 / 90.0, result);
     }
 
     private static void shouldNormalizeZeroScoreAsZero() {
         assertClose(0.0, NormalisasiNilaiCalculator.hitungNilai(0.0,
                 new double[]{0.0, 0.0}));
+    }
+
+    private static void shouldKeepDummyC3AtOne() {
+        assertClose(1.0, NormalisasiNilaiCalculator.hitungNilai(60.0,
+                new double[]{60.0, 60.0, 60.0}));
+    }
+
+    private static void shouldKeepPrimaryC3Separate() {
+        assertClose(88.0 / 90.0, NormalisasiNilaiCalculator.hitungNilai(88.0,
+                new double[]{88.0, 84.0, 90.0}));
     }
 
     private static void shouldNotExposeCriterionTypeInCriteriaPanel() throws Exception {

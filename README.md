@@ -51,7 +51,10 @@ database/db_magiq_waroenk_bikers.sql
 Skrip ini membuat ulang tabel pada skema `public`, sehingga jangan dijalankan
 pada database produksi yang sudah berisi data penting. File SQL menyediakan
 100 data barista, 6 kriteria racikan kopi, dan nilai penilaian awal. Skor C1--C6
-berada pada rentang 60--100 dalam kelipatan 5.
+berada pada rentang 60--100 dalam kelipatan 5, sedangkan C3 pada data dummy
+ditetapkan 60 sehingga maksimum dummy adalah C1=100, C2=100, C3=60, C4=100,
+C5=100, dan C6=100. Tiga data primer pada sheet Data Primer dihitung terpisah
+dengan nilai dan maksimum kolomnya sendiri.
 
 Untuk database Supabase yang sudah digunakan, buat backup lalu jalankan
 `database/migrations/20260801_drop_barista_entry_date.sql` di SQL Editor.
@@ -115,14 +118,14 @@ Password: admin123
 
 ## Kriteria Default
 
-| Kode | Kriteria | Keterangan |
-| --- | --- | --- |
-| C1 | Rasa Kopi | Tingkat keseimbangan rasa pahit, manis, dan keasaman |
-| C2 | Aroma | Keharuman kopi yang dihasilkan |
-| C3 | Konsistensi Racikan | Konsistensi rasa antara satu penyajian dengan lainnya |
-| C4 | Penyajian | Tampilan dan kerapihan penyajian kopi |
-| C5 | Kecepatan Penyajian | Kecepatan barista dalam menyajikan kopi |
-| C6 | Stabilitas Suhu Penyajian | Kestabilan suhu kopi saat disajikan |
+| Kode | Kriteria                  | Keterangan                                            |
+| ---- | ------------------------- | ----------------------------------------------------- |
+| C1   | Rasa Kopi                 | Tingkat keseimbangan rasa pahit, manis, dan keasaman  |
+| C2   | Aroma                     | Keharuman kopi yang dihasilkan                        |
+| C3   | Konsistensi Racikan       | Konsistensi rasa antara satu penyajian dengan lainnya |
+| C4   | Penyajian                 | Tampilan dan kerapihan penyajian kopi                 |
+| C5   | Kecepatan Penyajian       | Kecepatan barista dalam menyajikan kopi               |
+| C6   | Stabilitas Suhu Penyajian | Kestabilan suhu kopi saat disajikan                   |
 
 ## Ringkasan Metode MAGIQ
 
@@ -137,7 +140,7 @@ Langkah perhitungan:
 1. Menentukan alternatif barista.
 2. Menentukan kriteria dan urutan prioritas kriteria.
 3. Menghitung bobot kriteria menggunakan ROC.
-4. Melakukan normalisasi nilai pada setiap kriteria dengan membagi nilai dengan skala maksimum 100.
+4. Melakukan normalisasi nilai pada setiap kriteria dengan membagi nilai dengan nilai maksimum pada kolom kriteria tersebut.
 5. Menghitung nilai preferensi setiap barista:
 
 ```text

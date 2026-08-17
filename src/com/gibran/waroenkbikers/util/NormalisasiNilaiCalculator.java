@@ -1,8 +1,6 @@
 package com.gibran.waroenkbikers.util;
 
 public final class NormalisasiNilaiCalculator {
-    private static final double SKALA_MAKSIMUM = 100.0;
-
     private NormalisasiNilaiCalculator() {
     }
 
@@ -11,6 +9,15 @@ public final class NormalisasiNilaiCalculator {
             throw new IllegalArgumentException("Data nilai untuk normalisasi belum tersedia.");
         }
 
-        return nilai == 0.0 ? 0.0 : nilai / SKALA_MAKSIMUM;
+        double maksimum = nilaiMaksimum(nilaiKolom);
+        return maksimum == 0.0 ? 0.0 : nilai / maksimum;
+    }
+
+    private static double nilaiMaksimum(double[] nilaiKolom) {
+        double maksimum = nilaiKolom[0];
+        for (int i = 1; i < nilaiKolom.length; i++) {
+            maksimum = Math.max(maksimum, nilaiKolom[i]);
+        }
+        return maksimum;
     }
 }

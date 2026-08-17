@@ -92,13 +92,13 @@ INSERT INTO kriteria (kode, nama, bobot, urutan_prioritas, keterangan) VALUES
 ('C5', 'Kecepatan Penyajian', 0.0611, 5, 'Kecepatan barista dalam menyajikan kopi.'),
 ('C6', 'Stabilitas Suhu Penyajian', 0.0278, 6, 'Kestabilan suhu kopi saat disajikan.');
 
--- Nilai acuan deterministik 60--100 untuk enam kriteria dengan skala maksimum 100.
+-- Nilai acuan deterministik: C1, C2, C4, C5, C6 berada pada 60--100; C3 ditetapkan 60.
 INSERT INTO penilaian (id_barista, id_kriteria, nilai)
 SELECT b.id, k.id,
   CASE k.kode
     WHEN 'C1' THEN 60 + 5 * ( i        % 9)
     WHEN 'C2' THEN 60 + 5 * ((i / 9)  % 9)
-    WHEN 'C3' THEN 60 + 5 * ( i        % 9)
+    WHEN 'C3' THEN 60
     WHEN 'C4' THEN 60 + 5 * ((i * 5 + 2) % 9)
     WHEN 'C5' THEN 60 + 5 * ((i * 7 + 4) % 9)
     WHEN 'C6' THEN 60 + 5 * ((i * 8 + 6) % 9)
