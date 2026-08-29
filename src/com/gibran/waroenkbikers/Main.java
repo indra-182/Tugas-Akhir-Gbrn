@@ -14,7 +14,7 @@ public class Main {
             try {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                 com.gibran.waroenkbikers.ui.TampilanUtil.terapkanWarnaTombolGlobal();
-                DatabaseConnection.testConnection();
+                DatabaseConnection.getConnection();
                 new LoginFrame().setVisible(true);
             } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | SQLException | UnsupportedLookAndFeelException ex) {
                 DialogUtil.showError(null,

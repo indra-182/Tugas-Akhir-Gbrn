@@ -7,7 +7,6 @@
 !/src/
 !/README.md
 !/build.xml
-!/manifest.mf
 
 # Machine-specific NetBeans files
 /nbproject/private/

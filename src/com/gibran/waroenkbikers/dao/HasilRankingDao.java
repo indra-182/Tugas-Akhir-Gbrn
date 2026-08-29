@@ -12,16 +12,9 @@ import java.util.List;
 public class HasilRankingDao {
     public void hapusSemua() throws SQLException {
         String hapusSql = "DELETE FROM hasil_ranking";
-        Connection koneksi = null;
-        PreparedStatement perintahHapus = null;
-
-        try {
-            koneksi = DatabaseConnection.getConnection();
-            perintahHapus = koneksi.prepareStatement(hapusSql);
+        Connection koneksi = DatabaseConnection.getConnection();
+        try (PreparedStatement perintahHapus = koneksi.prepareStatement(hapusSql)) {
             perintahHapus.executeUpdate();
-        } finally {
-            DatabaseConnection.closeQuietly(perintahHapus);
-            DatabaseConnection.closeQuietly(koneksi);
         }
     }
 
@@ -31,24 +24,24 @@ public class HasilRankingDao {
                 + "(id_barista, nilai_magiq, peringkat) VALUES (?, ?, ?)";
 
         Connection koneksi = null;
-        PreparedStatement perintahHapus = null;
-        PreparedStatement perintahTambah = null;
 
         try {
             koneksi = DatabaseConnection.getConnection();
             koneksi.setAutoCommit(false);
 
-            perintahHapus = koneksi.prepareStatement(hapusSql);
-            perintahHapus.executeUpdate();
+            try (PreparedStatement perintahHapus = koneksi.prepareStatement(hapusSql)) {
+                perintahHapus.executeUpdate();
 
-            perintahTambah = koneksi.prepareStatement(tambahSql);
-            for (HasilRanking hasilRanking : daftarHasilRanking) {
-                perintahTambah.setInt(1, hasilRanking.getIdBarista());
-                perintahTambah.setDouble(2, hasilRanking.getNilaiMagiq());
-                perintahTambah.setInt(3, hasilRanking.getPeringkat());
-                perintahTambah.addBatch();
+                try (PreparedStatement perintahTambah = koneksi.prepareStatement(tambahSql)) {
+                    for (HasilRanking hasilRanking : daftarHasilRanking) {
+                        perintahTambah.setInt(1, hasilRanking.getIdBarista());
+                        perintahTambah.setDouble(2, hasilRanking.getNilaiMagiq());
+                        perintahTambah.setInt(3, hasilRanking.getPeringkat());
+                        perintahTambah.addBatch();
+                    }
+                    perintahTambah.executeBatch();
+                }
             }
-            perintahTambah.executeBatch();
             koneksi.commit();
         } catch (SQLException ex) {
             if (koneksi != null) {
@@ -56,12 +49,9 @@ public class HasilRankingDao {
             }
             throw ex;
         } finally {
-            DatabaseConnection.closeQuietly(perintahTambah);
-            DatabaseConnection.closeQuietly(perintahHapus);
             if (koneksi != null) {
                 koneksi.setAutoCommit(true);
             }
-            DatabaseConnection.closeQuietly(koneksi);
         }
     }
 
@@ -72,14 +62,10 @@ public class HasilRankingDao {
                 + "JOIN barista b ON h.id_barista = b.id "
                 + "ORDER BY h.peringkat";
         List<HasilRanking> daftarHasilRanking = new ArrayList<HasilRanking>();
-        Connection koneksi = null;
-        PreparedStatement perintah = null;
-        ResultSet hasil = null;
+        Connection koneksi = DatabaseConnection.getConnection();
 
-        try {
-            koneksi = DatabaseConnection.getConnection();
-            perintah = koneksi.prepareStatement(sql);
-            hasil = perintah.executeQuery();
+        try (PreparedStatement perintah = koneksi.prepareStatement(sql);
+                ResultSet hasil = perintah.executeQuery()) {
             while (hasil.next()) {
                 HasilRanking hasilRanking = new HasilRanking();
                 hasilRanking.setIdBarista(hasil.getInt("id_barista"));
@@ -90,10 +76,6 @@ public class HasilRankingDao {
                 daftarHasilRanking.add(hasilRanking);
             }
             return daftarHasilRanking;
-        } finally {
-            DatabaseConnection.closeQuietly(hasil);
-            DatabaseConnection.closeQuietly(perintah);
-            DatabaseConnection.closeQuietly(koneksi);
         }
     }
 }

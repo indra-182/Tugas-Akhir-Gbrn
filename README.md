@@ -78,7 +78,6 @@ terhubung dari jaringan IPv4 maupun IPv6.
 Isi file konfigurasi seperti ini:
 
 ```properties
-db.driver=org.postgresql.Driver
 db.url=jdbc:postgresql://aws-REGION.pooler.supabase.com:5432/postgres?sslmode=require&gssEncMode=disable&connectTimeout=10&tcpKeepAlive=true&ApplicationName=SPK-MAGIQ-Waroenk-Bikers
 db.user=postgres.PROJECT_REF
 db.password=ISI_PASSWORD_DATABASE_SUPABASE

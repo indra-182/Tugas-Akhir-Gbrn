@@ -12,38 +12,23 @@ public class PenggunaDao {
     public Pengguna login(String username, String password) throws SQLException {
         String sql = "SELECT id, username, nama_lengkap, role FROM pengguna "
                 + "WHERE username = ? AND password_hash = ?";
-        Connection koneksi = null;
-        PreparedStatement perintah = null;
-        ResultSet hasil = null;
+        Connection koneksi = DatabaseConnection.getConnection();
 
-        try {
-            koneksi = DatabaseConnection.getConnection();
-            System.out.println("[DEBUG] DB connected: " + (koneksi != null && !koneksi.isClosed()));
-            perintah = koneksi.prepareStatement(sql);
+        try (PreparedStatement perintah = koneksi.prepareStatement(sql)) {
             perintah.setString(1, username);
-            String generatedHash = PasswordUtil.sha256(password);
-            System.out.println("[DEBUG] Login attempt: username='" + username + "' password='****' hash='" + generatedHash + "'");
-            System.out.println("[DEBUG] SQL: " + sql);
-            perintah.setString(2, generatedHash);
-            hasil = perintah.executeQuery();
-            System.out.println("[DEBUG] Query executed");
+            perintah.setString(2, PasswordUtil.sha256(password));
+            try (ResultSet hasil = perintah.executeQuery()) {
+                if (!hasil.next()) {
+                    return null;
+                }
 
-            if (!hasil.next()) {
-                System.out.println("[DEBUG] No matching row found");
-                return null;
+                Pengguna pengguna = new Pengguna();
+                pengguna.setId(hasil.getInt("id"));
+                pengguna.setUsername(hasil.getString("username"));
+                pengguna.setNamaLengkap(hasil.getString("nama_lengkap"));
+                pengguna.setRole(hasil.getString("role"));
+                return pengguna;
             }
-            System.out.println("[DEBUG] Row found, user.id=" + hasil.getInt("id"));
-
-            Pengguna pengguna = new Pengguna();
-            pengguna.setId(hasil.getInt("id"));
-            pengguna.setUsername(hasil.getString("username"));
-            pengguna.setNamaLengkap(hasil.getString("nama_lengkap"));
-            pengguna.setRole(hasil.getString("role"));
-            return pengguna;
-        } finally {
-            DatabaseConnection.closeQuietly(hasil);
-            DatabaseConnection.closeQuietly(perintah);
-            DatabaseConnection.closeQuietly(koneksi);
         }
     }
 }

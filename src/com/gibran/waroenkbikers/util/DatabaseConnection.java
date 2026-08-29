@@ -30,12 +30,6 @@ public final class DatabaseConnection {
         }
 
         loadProperties();
-        try {
-            Class.forName(properties.getProperty("db.driver"));
-        } catch (ClassNotFoundException ex) {
-            throw new SQLException("Driver PostgreSQL tidak ditemukan. Tambahkan postgresql-42.7.13.jar ke Libraries.", ex);
-        }
-
         koneksiBersama = DriverManager.getConnection(
                 properties.getProperty("db.url"),
                 properties.getProperty("db.user"),
@@ -77,44 +71,24 @@ public final class DatabaseConnection {
         }
     }
 
-    public static void testConnection() throws SQLException {
-        getConnection();
-    }
-
     private static void loadProperties() throws SQLException {
         if (properties != null) {
             return;
         }
 
         properties = new Properties();
-        InputStream inputStream = DatabaseConnection.class.getResourceAsStream(CONFIG_FILE);
-        if (inputStream == null) {
-            throw new SQLException("File konfigurasi database tidak ditemukan: " + CONFIG_FILE);
-        }
-
-        try {
-            properties.load(inputStream);
-        } catch (IOException ex) {
-            throw new SQLException("Gagal membaca konfigurasi database.", ex);
-        } finally {
-            try {
-                inputStream.close();
-            } catch (IOException ignored) {
+        try (InputStream inputStream = DatabaseConnection.class.getResourceAsStream(CONFIG_FILE)) {
+            if (inputStream == null) {
+                throw new SQLException("File konfigurasi database tidak ditemukan: " + CONFIG_FILE);
             }
+            try {
+                properties.load(inputStream);
+            } catch (IOException ex) {
+                throw new SQLException("Gagal membaca konfigurasi database.", ex);
+            }
+        } catch (IOException ex) {
+            throw new SQLException("Gagal menutup file konfigurasi database.", ex);
         }
     }
 
-    /**
-     * Menutup resource JDBC tanpa melempar exception.
-     * Koneksi bersama sengaja dilewati agar tetap bisa dipakai ulang.
-     */
-    public static void closeQuietly(AutoCloseable closeable) {
-        if (closeable == null || closeable == koneksiBersama) {
-            return;
-        }
-        try {
-            closeable.close();
-        } catch (Exception ignored) {
-        }
-    }
 }

@@ -22,16 +22,12 @@ public final class TampilanUtil {
 
     public static final Color WARNA_GARIS = new Color(55, 65, 81);
     public static final Color WARNA_HEADER = new Color(15, 118, 110);
-    public static final Color WARNA_HEADER_TERANG = new Color(229, 231, 235);
     public static final Color WARNA_SIDEBAR = new Color(249, 250, 251);
     public static final Color WARNA_LATAR = new Color(243, 244, 246);
     public static final Color WARNA_BIRU_MUDA = new Color(239, 246, 255);
-    public static final Color WARNA_BIRU = new Color(15, 118, 110);
     public static final Color WARNA_BIRU_TUA = new Color(15, 118, 110);
     public static final Color WARNA_HIJAU = new Color(22, 163, 74);
-    public static final Color WARNA_KUNING = new Color(245, 158, 11);
     public static final Color WARNA_MERAH = new Color(220, 38, 38);
-    public static final Color WARNA_ABU = new Color(107, 114, 128);
     public static final Font FONT_NORMAL = new Font("Tahoma", Font.PLAIN, 12);
     public static final Font FONT_TEBAL = new Font("Tahoma", Font.BOLD, 13);
     public static final Font FONT_JUDUL = new Font("Tahoma", Font.BOLD, 18);

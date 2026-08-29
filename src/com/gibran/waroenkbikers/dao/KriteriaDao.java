@@ -14,30 +14,16 @@ import java.util.List;
 
 public class KriteriaDao {
     public List<Kriteria> ambilSemua() throws SQLException {
-        Connection koneksi = null;
-        try {
-            koneksi = DatabaseConnection.getConnection();
-            return ambilSemua(koneksi, false);
-        } finally {
-            DatabaseConnection.closeQuietly(koneksi);
-        }
+        Connection koneksi = DatabaseConnection.getConnection();
+        return ambilSemua(koneksi, false);
     }
 
     public int hitungSemua() throws SQLException {
         String sql = "SELECT COUNT(*) AS jumlah FROM kriteria";
-        Connection koneksi = null;
-        PreparedStatement perintah = null;
-        ResultSet hasil = null;
-
-        try {
-            koneksi = DatabaseConnection.getConnection();
-            perintah = koneksi.prepareStatement(sql);
-            hasil = perintah.executeQuery();
+        Connection koneksi = DatabaseConnection.getConnection();
+        try (PreparedStatement perintah = koneksi.prepareStatement(sql);
+                ResultSet hasil = perintah.executeQuery()) {
             return hasil.next() ? hasil.getInt("jumlah") : 0;
-        } finally {
-            DatabaseConnection.closeQuietly(hasil);
-            DatabaseConnection.closeQuietly(perintah);
-            DatabaseConnection.closeQuietly(koneksi);
         }
     }
 
@@ -76,7 +62,6 @@ public class KriteriaDao {
             throw ex;
         } finally {
             resetAutoCommit(koneksi, transaksiAktif);
-            DatabaseConnection.closeQuietly(koneksi);
         }
     }
 
@@ -119,7 +104,6 @@ public class KriteriaDao {
             throw ex;
         } finally {
             resetAutoCommit(koneksi, transaksiAktif);
-            DatabaseConnection.closeQuietly(koneksi);
         }
     }
 
@@ -153,7 +137,6 @@ public class KriteriaDao {
             throw ex;
         } finally {
             resetAutoCommit(koneksi, transaksiAktif);
-            DatabaseConnection.closeQuietly(koneksi);
         }
     }
 
@@ -165,18 +148,12 @@ public class KriteriaDao {
         }
 
         List<Kriteria> daftarKriteria = new ArrayList<>();
-        PreparedStatement perintah = null;
-        ResultSet hasil = null;
-        try {
-            perintah = koneksi.prepareStatement(sql);
-            hasil = perintah.executeQuery();
+        try (PreparedStatement perintah = koneksi.prepareStatement(sql);
+                ResultSet hasil = perintah.executeQuery()) {
             while (hasil.next()) {
                 daftarKriteria.add(petakanKriteria(hasil));
             }
             return daftarKriteria;
-        } finally {
-            DatabaseConnection.closeQuietly(hasil);
-            DatabaseConnection.closeQuietly(perintah);
         }
     }
 
@@ -185,51 +162,38 @@ public class KriteriaDao {
         String sql = "INSERT INTO kriteria "
                 + "(kode, nama, bobot, urutan_prioritas, keterangan) "
                 + "VALUES (?, ?, ?, ?, ?)";
-        PreparedStatement perintah = null;
-        ResultSet generatedKeys = null;
-        try {
-            perintah = koneksi.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+        try (PreparedStatement perintah = koneksi.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             perintah.setString(1, kriteria.getKode());
             perintah.setString(2, kriteria.getNama());
             perintah.setDouble(3, kriteria.getBobot());
             perintah.setInt(4, prioritasSementara);
             perintah.setString(5, kriteria.getKeterangan());
             perintah.executeUpdate();
-            generatedKeys = perintah.getGeneratedKeys();
-            if (!generatedKeys.next()) {
-                throw new SQLException("ID kriteria baru tidak dapat dibaca.");
+            try (ResultSet generatedKeys = perintah.getGeneratedKeys()) {
+                if (!generatedKeys.next()) {
+                    throw new SQLException("ID kriteria baru tidak dapat dibaca.");
+                }
+                return generatedKeys.getInt(1);
             }
-            return generatedKeys.getInt(1);
-        } finally {
-            DatabaseConnection.closeQuietly(generatedKeys);
-            DatabaseConnection.closeQuietly(perintah);
         }
     }
 
     private void ubahDataKriteria(Connection koneksi, Kriteria kriteria) throws SQLException {
         String sql = "UPDATE kriteria SET kode = ?, nama = ?, keterangan = ? WHERE id = ?";
-        PreparedStatement perintah = null;
-        try {
-            perintah = koneksi.prepareStatement(sql);
+        try (PreparedStatement perintah = koneksi.prepareStatement(sql)) {
             perintah.setString(1, kriteria.getKode());
             perintah.setString(2, kriteria.getNama());
             perintah.setString(3, kriteria.getKeterangan());
             perintah.setInt(4, kriteria.getId());
             perintah.executeUpdate();
-        } finally {
-            DatabaseConnection.closeQuietly(perintah);
         }
     }
 
     private void hapusDataKriteria(Connection koneksi, int id) throws SQLException {
         String sql = "DELETE FROM kriteria WHERE id = ?";
-        PreparedStatement perintah = null;
-        try {
-            perintah = koneksi.prepareStatement(sql);
+        try (PreparedStatement perintah = koneksi.prepareStatement(sql)) {
             perintah.setInt(1, id);
             perintah.executeUpdate();
-        } finally {
-            DatabaseConnection.closeQuietly(perintah);
         }
     }
 
@@ -238,23 +202,15 @@ public class KriteriaDao {
             throw new SQLException("Jumlah prioritas kriteria tidak valid.");
         }
         String sql = "UPDATE kriteria SET urutan_prioritas = urutan_prioritas + ?";
-        PreparedStatement perintah = null;
-        try {
-            perintah = koneksi.prepareStatement(sql);
+        try (PreparedStatement perintah = koneksi.prepareStatement(sql)) {
             perintah.setInt(1, offset);
             perintah.executeUpdate();
-        } finally {
-            DatabaseConnection.closeQuietly(perintah);
         }
     }
 
     private void kunciTabelKriteria(Connection koneksi) throws SQLException {
-        Statement perintah = null;
-        try {
-            perintah = koneksi.createStatement();
+        try (Statement perintah = koneksi.createStatement()) {
             perintah.execute("LOCK TABLE kriteria IN SHARE ROW EXCLUSIVE MODE");
-        } finally {
-            DatabaseConnection.closeQuietly(perintah);
         }
     }
 
@@ -262,9 +218,7 @@ public class KriteriaDao {
         double[] bobot = daftarKriteria.isEmpty()
                 ? new double[0] : RocWeightCalculator.hitungSemua(daftarKriteria.size());
         String sql = "UPDATE kriteria SET urutan_prioritas = ?, bobot = ? WHERE id = ?";
-        PreparedStatement perintah = null;
-        try {
-            perintah = koneksi.prepareStatement(sql);
+        try (PreparedStatement perintah = koneksi.prepareStatement(sql)) {
             for (int i = 0; i < daftarKriteria.size(); i++) {
                 Kriteria kriteria = daftarKriteria.get(i);
                 int urutan = i + 1;
@@ -276,8 +230,6 @@ public class KriteriaDao {
                 perintah.addBatch();
             }
             perintah.executeBatch();
-        } finally {
-            DatabaseConnection.closeQuietly(perintah);
         }
     }
 
