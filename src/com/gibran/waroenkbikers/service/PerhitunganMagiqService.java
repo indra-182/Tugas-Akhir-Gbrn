@@ -23,11 +23,6 @@ public class PerhitunganMagiqService {
     private final PenilaianDao penilaianDao = new PenilaianDao();
     private final HasilRankingDao hasilRankingDao = new HasilRankingDao();
 
-    public List<HasilRanking> hitungDanSimpan() throws SQLException {
-        List<HasilRanking> daftarHasilRanking = hitungDetailDanSimpan().getDaftarHasilRanking();
-        return daftarHasilRanking;
-    }
-
     public PerhitunganDetail hitungDetailDanSimpan() throws SQLException {
         PerhitunganDetail detail = hitungDetail();
         List<HasilRanking> daftarHasilRanking = detail.getDaftarHasilRanking();
@@ -35,11 +30,7 @@ public class PerhitunganMagiqService {
         return detail;
     }
 
-    public List<HasilRanking> hitung() throws SQLException {
-        return hitungDetail().getDaftarHasilRanking();
-    }
-
-    public PerhitunganDetail hitungDetail() throws SQLException {
+    private PerhitunganDetail hitungDetail() throws SQLException {
         List<Barista> daftarBarista = baristaDao.ambilSemua();
         List<Kriteria> daftarKriteria = kriteriaDao.ambilSemua();
         Map<Integer, Map<Integer, Double>> matriksPenilaian = penilaianDao.ambilSemuaSebagaiMatriks();
@@ -68,33 +59,6 @@ public class PerhitunganMagiqService {
         return new PerhitunganDetail(daftarBarista, daftarKriteria, matriksKeputusan,
                 bobotKriteria, daftarUrutanKriteria, matriksNormalisasi,
                 nilaiPreferensi, daftarHasilRanking);
-    }
-
-    public List<Object[]> ambilLaporanNormalisasi() throws SQLException {
-        List<Barista> daftarBarista = baristaDao.ambilSemua();
-        List<Kriteria> daftarKriteria = kriteriaDao.ambilSemua();
-        Map<Integer, Map<Integer, Double>> matriksPenilaian = penilaianDao.ambilSemuaSebagaiMatriks();
-
-        validasiInput(daftarBarista, daftarKriteria, matriksPenilaian);
-
-        double[][] matriksKeputusan = buatMatriksKeputusan(daftarBarista, daftarKriteria, matriksPenilaian);
-        double[][] matriksNormalisasi = hitungMatriksNormalisasi(daftarBarista, daftarKriteria, matriksKeputusan);
-        List<Object[]> dataSkor = new ArrayList<>();
-
-        for (int j = 0; j < daftarKriteria.size(); j++) {
-            for (int i = 0; i < daftarBarista.size(); i++) {
-                Barista barista = daftarBarista.get(i);
-                Kriteria kriteria = daftarKriteria.get(j);
-                dataSkor.add(new Object[]{
-                    barista.getKodeBarista(),
-                    barista.getNama(),
-                    kriteria.getKode(),
-                    kriteria.getNama(),
-                    matriksNormalisasi[i][j]
-                });
-            }
-        }
-        return dataSkor;
     }
 
     private double[][] buatMatriksKeputusan(List<Barista> daftarBarista, List<Kriteria> daftarKriteria,

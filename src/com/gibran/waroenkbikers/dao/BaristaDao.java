@@ -35,71 +35,43 @@ public class BaristaDao {
 
     public void hapus(int id) throws SQLException {
         String sql = "DELETE FROM barista WHERE id = ?";
-        Connection koneksi = null;
-        PreparedStatement perintah = null;
-        try {
-            koneksi = DatabaseConnection.getConnection();
-            perintah = koneksi.prepareStatement(sql);
+        Connection koneksi = DatabaseConnection.getConnection();
+        try (PreparedStatement perintah = koneksi.prepareStatement(sql)) {
             perintah.setInt(1, id);
             perintah.executeUpdate();
-        } finally {
-            DatabaseConnection.closeQuietly(perintah);
-            DatabaseConnection.closeQuietly(koneksi);
         }
     }
 
     private List<Barista> ambilDaftarBarista(String sql) throws SQLException {
         List<Barista> daftarBarista = new ArrayList<Barista>();
-        Connection koneksi = null;
-        PreparedStatement perintah = null;
-        ResultSet hasil = null;
+        Connection koneksi = DatabaseConnection.getConnection();
 
-        try {
-            koneksi = DatabaseConnection.getConnection();
-            perintah = koneksi.prepareStatement(sql);
-            hasil = perintah.executeQuery();
+        try (PreparedStatement perintah = koneksi.prepareStatement(sql);
+                ResultSet hasil = perintah.executeQuery()) {
             while (hasil.next()) {
                 daftarBarista.add(petakanBarista(hasil));
             }
             return daftarBarista;
-        } finally {
-            DatabaseConnection.closeQuietly(hasil);
-            DatabaseConnection.closeQuietly(perintah);
-            DatabaseConnection.closeQuietly(koneksi);
         }
     }
 
     private int hitungData(String sql) throws SQLException {
-        Connection koneksi = null;
-        PreparedStatement perintah = null;
-        ResultSet hasil = null;
-        try {
-            koneksi = DatabaseConnection.getConnection();
-            perintah = koneksi.prepareStatement(sql);
-            hasil = perintah.executeQuery();
+        Connection koneksi = DatabaseConnection.getConnection();
+        try (PreparedStatement perintah = koneksi.prepareStatement(sql);
+                ResultSet hasil = perintah.executeQuery()) {
             return hasil.next() ? hasil.getInt("jumlah") : 0;
-        } finally {
-            DatabaseConnection.closeQuietly(hasil);
-            DatabaseConnection.closeQuietly(perintah);
-            DatabaseConnection.closeQuietly(koneksi);
         }
     }
 
     private void simpan(String sql, Barista barista, boolean ubah) throws SQLException {
-        Connection koneksi = null;
-        PreparedStatement perintah = null;
-        try {
-            koneksi = DatabaseConnection.getConnection();
-            perintah = koneksi.prepareStatement(sql);
+        Connection koneksi = DatabaseConnection.getConnection();
+        try (PreparedStatement perintah = koneksi.prepareStatement(sql)) {
             perintah.setString(1, barista.getKodeBarista());
             perintah.setString(2, barista.getNama());
             if (ubah) {
                 perintah.setInt(3, barista.getId());
             }
             perintah.executeUpdate();
-        } finally {
-            DatabaseConnection.closeQuietly(perintah);
-            DatabaseConnection.closeQuietly(koneksi);
         }
     }
 

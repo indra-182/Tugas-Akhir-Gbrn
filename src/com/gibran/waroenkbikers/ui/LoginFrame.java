@@ -1,7 +1,7 @@
 package com.gibran.waroenkbikers.ui;
 
+import com.gibran.waroenkbikers.dao.PenggunaDao;
 import com.gibran.waroenkbikers.model.Pengguna;
-import com.gibran.waroenkbikers.service.AutentikasiService;
 import com.gibran.waroenkbikers.util.DialogUtil;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -24,7 +24,7 @@ public class LoginFrame extends JFrame {
     private final JPasswordField passwordField = new JPasswordField(16);
     private final JButton loginButton = TampilanUtil.buatTombolAksi("Login");
     private final JButton batalButton = TampilanUtil.buatTombolAksi("Batal");
-    private final AutentikasiService autentikasiService = new AutentikasiService();
+    private final PenggunaDao penggunaDao = new PenggunaDao();
 
     public LoginFrame() {
         setTitle("SPK Kualitas Racikan Kopi Barista - Waroenk Bikers");
@@ -118,7 +118,13 @@ public class LoginFrame extends JFrame {
         try {
             String username = usernameField.getText();
             String password = new String(passwordField.getPassword());
-            Pengguna pengguna = autentikasiService.login(username, password);
+            if (username == null || username.trim().isEmpty()) {
+                throw new IllegalArgumentException("Username wajib diisi.");
+            }
+            if (password == null || password.trim().isEmpty()) {
+                throw new IllegalArgumentException("Password wajib diisi.");
+            }
+            Pengguna pengguna = penggunaDao.login(username.trim(), password);
             if (pengguna == null) {
                 DialogUtil.showWarning(this, "Username atau password salah.");
                 return;
